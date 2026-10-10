@@ -5,6 +5,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Лингва — объяснение языковых ошибок",
   description: "Поймите, почему ответ неверен. Ваши задания и история остаются в этом браузере.",
+  openGraph: {
+    title: "Лингва — объяснение языковых ошибок",
+    description: "Поймите, почему ответ неверен. Разбирайте ошибки и учитесь на понятных объяснениях.",
+    siteName: "Лингва",
+    locale: "ru_RU",
+    type: "website",
+  },
   manifest: "/manifest.webmanifest",
   applicationName: "Лингва",
   appleWebApp: { capable: true, title: "Лингва", statusBarStyle: "default" },
