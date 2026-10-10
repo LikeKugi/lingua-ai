@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Лингва — разбор языковых ошибок",
+  "short_name": "Лингва",
+  "description": "Поймите, почему ответ неверен",
+  "lang": "ru",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F3F1E9",
+  "theme_color": "#244D3B",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
