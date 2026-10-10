@@ -11,7 +11,7 @@ import {
 
 type Draft = { taskType: TaskType; words: string[]; sentence: string; userAnswer: string; correctAnswer: string };
 type Toast = { text: string; kind: "success" | "error" | "info" };
-const blankDraft = (): Draft => ({ taskType: "words", words: ["", ""], sentence: "", userAnswer: "", correctAnswer: "" });
+const blankDraft = (): Draft => ({ taskType: "sentence", words: [], sentence: "", userAnswer: "", correctAnswer: "" });
 const PAGES = [
   { href: "/", title: "Разбор", key: "explain", symbol: "✳" },
   { href: "/history", title: "История", key: "history", symbol: "◷" },
@@ -311,8 +311,8 @@ export default function Workspace() {
         {page === "explain" && <section className="explain-page">
           <form onSubmit={explain} className="workspace-card form-card">
             <div className="task-switch" role="tablist" aria-label="Тип задания">
-              <button type="button" role="tab" aria-selected={draft.taskType === "words"} className={draft.taskType === "words" ? "selected" : ""} onClick={() => changeTaskType("words")}>Слова</button>
               <button type="button" role="tab" aria-selected={draft.taskType === "sentence"} className={draft.taskType === "sentence" ? "selected" : ""} onClick={() => changeTaskType("sentence")}>Предложение</button>
+              <button type="button" role="tab" aria-selected={draft.taskType === "words"} className={draft.taskType === "words" ? "selected" : ""} onClick={() => changeTaskType("words")}>Слова</button>
             </div>
             {draft.taskType === "words" ? <Field label="Слова для задания" hint="Введите слова или фразы, из которых нужно составить предложение.">
               <div className="word-list">{draft.words.map((word, index) => <div className="word-input" key={index}><span className="word-index">{String(index + 1).padStart(2, "0")}</span><input aria-label={`Слово ${index + 1}`} value={word} onChange={(event) => updateDraft("words", draft.words.map((item, i) => i === index ? event.target.value : item))} placeholder={index === 0 ? "например, she" : index === 1 ? "например, go to work" : "Добавьте слово или фразу"} /><button className="icon-button remove-word" type="button" disabled={draft.words.length <= 1} onClick={() => updateDraft("words", draft.words.filter((_, i) => i !== index))} aria-label={`Удалить слово ${index + 1}`}>×</button></div>)}
