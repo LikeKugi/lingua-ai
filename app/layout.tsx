@@ -12,6 +12,12 @@ export const metadata: Metadata = {
     locale: "ru_RU",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Лингва — объяснение языковых ошибок",
+    description: "Поймите, почему ответ неверен. Разбирайте ошибки и учитесь на понятных объяснениях.",
+    images: "/opengraph-image",
+  },
   manifest: "/manifest.webmanifest",
   applicationName: "Лингва",
   appleWebApp: { capable: true, title: "Лингва", statusBarStyle: "default" },
