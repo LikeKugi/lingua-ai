@@ -121,9 +121,9 @@ export function buildMessages(input: {
     `Ответ дай структурировано и на языке: ${label}.`,
   ].filter(Boolean);
   let taskLine: string;
-  if (input.taskType === "words") {
+  if (isWordsTask(input.taskType)) {
     taskLine = `Задание: составить предложение из слов: [${(input.task as string[]).map((word) => word.trim()).filter(Boolean).join(", ")}]`;
-  } else if (input.taskType === "paste-blank") {
+  } else if (isPasteBlankTask(input.taskType)) {
     const segments = input.task as BlankSegment[];
     const sentence = segments
       .map((segment) => (segment.type === "text" ? segment.text : "___"))

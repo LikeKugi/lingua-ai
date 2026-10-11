@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type ChangeEvent, type Dispatch, type SetStateAction, useRef, useState } from "react";
-import { dateLabel, languageLabel, taskToText, type HistoryItem } from "../lib";
+import { dateLabel, languageLabel, taskToText, isWordsTask, isSentenceTask, isPasteBlankTask, type HistoryItem, type TaskType } from "../lib";
 import type { Toast } from "./types";
 
 interface HistoryPageProps {
@@ -21,7 +21,7 @@ const isHistoryItem = (value: unknown): value is HistoryItem => {
   return (
     typeof record.id === "string" &&
     typeof record.createdAt === "number" &&
-    (record.taskType === "words" || record.taskType === "sentence" || record.taskType === "paste-blank") &&
+    (isWordsTask(record.taskType as TaskType) || isSentenceTask(record.taskType as TaskType) || isPasteBlankTask(record.taskType as TaskType)) &&
     (typeof record.task === "string" || Array.isArray(record.task)) &&
     typeof record.userAnswer === "string" &&
     typeof record.correctAnswer === "string" &&
@@ -152,7 +152,7 @@ export default function HistoryPage({
               aria-label={ `Открыть разбор от ${ dateLabel(item.createdAt) }` }
             >
               <div className="history-card-top">
-                <span className="type-badge">{ item.taskType === "words" ? "СЛОВА" : item.taskType === "paste-blank" ? "ПРОПУСКИ" : "ПРЕДЛОЖЕНИЕ" }</span>
+                <span className="type-badge">{ isWordsTask(item.taskType) ? "СЛОВА" : isPasteBlankTask(item.taskType) ? "ПРОПУСКИ" : "ПРЕДЛОЖЕНИЕ" }</span>
                 <time>{ dateLabel(item.createdAt) }</time>
               </div>
               <h2>{ taskToText(item.task) }</h2>

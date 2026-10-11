@@ -13,6 +13,7 @@ import {
 import {
   BUILTIN_PROMPTS, defaultLanguage, defaultSettings, dateLabel,
   buildMessages, languageLabel, validBaseUrl, taskToText,
+  isWordsTask, isPasteBlankTask,
   type HistoryItem, type PromptTemplate, type Settings, type TaskType,
 } from './lib';
 import { Markdown } from './components/ui';
@@ -203,8 +204,8 @@ export default function Workspace() {
     if (draft.taskType !== taskType) setDraft({
       ...blankDraft(),
       taskType,
-      words: taskType === 'words' ? ['', ''] : [],
-      blankTask: taskType === 'paste-blank' ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }] : []
+      words: isWordsTask(taskType) ? ['', ''] : [],
+      blankTask: isPasteBlankTask(taskType) ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }] : []
     });
   };
   const updateDraft = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({
@@ -213,9 +214,9 @@ export default function Workspace() {
   }));
   const clearDraft = () => setDraft((current) => ({
     taskType: current.taskType,
-    words: current.taskType === 'words' ? ['', ''] : [],
+    words: isWordsTask(current.taskType) ? ['', ''] : [],
     sentence: '',
-    blankTask: current.taskType === 'paste-blank'
+    blankTask: isPasteBlankTask(current.taskType)
       ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }]
       : [],
     userAnswer: '',
@@ -571,7 +572,7 @@ export default function Workspace() {
                  aria-modal="true" aria-labelledby="history-modal-title">
             <div className="modal-head">
                 <div><span
-                    className="type-badge">{ selectedHistory.taskType === 'words' ? 'СЛОВА' : selectedHistory.taskType === 'paste-blank' ? 'ПРОПУСКИ' : 'ПРЕДЛОЖЕНИЕ' }</span><h2
+                    className="type-badge">{ isWordsTask(selectedHistory.taskType) ? 'СЛОВА' : isPasteBlankTask(selectedHistory.taskType) ? 'ПРОПУСКИ' : 'ПРЕДЛОЖЕНИЕ' }</span><h2
                     id="history-modal-title">Разбор ошибки</h2>
                     <time>{ dateLabel(selectedHistory.createdAt) }</time>
                 </div>
