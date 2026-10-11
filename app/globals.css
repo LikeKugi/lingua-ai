@@ -377,21 +377,111 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: var(--font-size-d
 }
 
 /* Responsive font sizing (mobile-first).
-   The base sizes above are the smallest (mobile). Larger viewports scale the
-   tiny labels up via min-width queries. On full-screen nothing renders
-   below 12px. */
+   The base sizes above are the smallest (mobile). Each wider breakpoint shifts
+   the whole type scale up by a fixed amount: +1px (>=768), +4px (>=1024),
+   +6px (>=1440), +8px (>=2560). On full-screen nothing renders below 12px. */
 @media (min-width: 768px) {
   :root {
     --font-size-8: 9px;
     --font-size-9: 10px;
+    --font-size-10: 11px;
+    --font-size-11: 12px;
+    --font-size-12: 13px;
+    --font-size-13: 14px;
+    --font-size-14: 15px;
+    --font-size-15: 16px;
+    --font-size-16: 17px;
+    --font-size-17: 18px;
+    --font-size-18: 19px;
+    --font-size-19: 20px;
+    --font-size-20: 21px;
+    --font-size-21: 22px;
+    --font-size-22: 23px;
+    --font-size-23: 24px;
+    --font-size-24: 25px;
+    --font-size-27: 28px;
+    --font-size-32: 33px;
+    --font-size-35: 36px;
+    --font-size-display: clamp(36px, 3.3vw, 44px);
   }
 }
 @media (min-width: 1024px) {
   :root {
     --font-size-8: 12px;
-    --font-size-9: 12px;
-    --font-size-10: 12px;
-    --font-size-11: 12px;
+    --font-size-9: 13px;
+    --font-size-10: 14px;
+    --font-size-11: 15px;
+    --font-size-12: 16px;
+    --font-size-13: 17px;
+    --font-size-14: 18px;
+    --font-size-15: 19px;
+    --font-size-16: 20px;
+    --font-size-17: 21px;
+    --font-size-18: 22px;
+    --font-size-19: 23px;
+    --font-size-20: 24px;
+    --font-size-21: 25px;
+    --font-size-22: 26px;
+    --font-size-23: 27px;
+    --font-size-24: 28px;
+    --font-size-27: 31px;
+    --font-size-32: 36px;
+    --font-size-35: 39px;
+    --font-size-display: clamp(39px, 3.3vw, 47px);
+  }
+}
+
+/* Very large screens: grow the whole type scale uniformly.
+   >=1440px: minimum 14px (every size shifted +6px)
+   >=2560px: minimum 16px (every size shifted +8px) */
+@media (min-width: 1440px) {
+  :root {
+    --font-size-8: 14px;
+    --font-size-9: 15px;
+    --font-size-10: 16px;
+    --font-size-11: 17px;
+    --font-size-12: 18px;
+    --font-size-13: 19px;
+    --font-size-14: 20px;
+    --font-size-15: 21px;
+    --font-size-16: 22px;
+    --font-size-17: 23px;
+    --font-size-18: 24px;
+    --font-size-19: 25px;
+    --font-size-20: 26px;
+    --font-size-21: 27px;
+    --font-size-22: 28px;
+    --font-size-23: 29px;
+    --font-size-24: 30px;
+    --font-size-27: 33px;
+    --font-size-32: 38px;
+    --font-size-35: 41px;
+    --font-size-display: clamp(41px, 3.3vw, 49px);
+  }
+}
+@media (min-width: 2560px) {
+  :root {
+    --font-size-8: 16px;
+    --font-size-9: 17px;
+    --font-size-10: 18px;
+    --font-size-11: 19px;
+    --font-size-12: 20px;
+    --font-size-13: 21px;
+    --font-size-14: 22px;
+    --font-size-15: 23px;
+    --font-size-16: 24px;
+    --font-size-17: 25px;
+    --font-size-18: 26px;
+    --font-size-19: 27px;
+    --font-size-20: 28px;
+    --font-size-21: 29px;
+    --font-size-22: 30px;
+    --font-size-23: 31px;
+    --font-size-24: 32px;
+    --font-size-27: 35px;
+    --font-size-32: 40px;
+    --font-size-35: 43px;
+    --font-size-display: clamp(43px, 3.3vw, 51px);
   }
 }
 
