@@ -204,13 +204,17 @@ export default function Workspace() {
   }, [draft, apiKey, settings.baseUrl, settings.model]);
 
   const changeTaskType = (taskType: TaskType) => {
-    if (draft.taskType !== taskType) setDraft({
-      ...blankDraft(),
-      taskType,
-      words: isWordsTask(taskType) ? ['', ''] : [],
-      blankTask: isPasteBlankTask(taskType) ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }] : [],
-      testVariants: isTestTask(taskType) ? ['', ''] : []
-    });
+    if (draft.taskType !== taskType) {
+      setDraft({
+        ...blankDraft(),
+        taskType,
+        words: isWordsTask(taskType) ? ['', ''] : [],
+        blankTask: isPasteBlankTask(taskType) ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }] : [],
+        testVariants: isTestTask(taskType) ? ['', ''] : []
+      });
+      setExplanation(null);
+      setExplanationError('');
+    }
   };
   const updateDraft = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({
     ...current,
