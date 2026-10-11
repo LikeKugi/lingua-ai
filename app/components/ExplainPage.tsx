@@ -58,7 +58,7 @@ export default function ExplainPage({
           >Слова
           </button>
         </div>
-        { draft.taskType === "words" ? (
+        { draft.taskType === "words" && (
           <Field
             label="Слова для задания"
             hint="Введите слова или фразы, из которых нужно составить предложение."
@@ -101,7 +101,8 @@ export default function ExplainPage({
               </button>
             </div>
           </Field>
-        ) : (
+        ) }
+        { draft.taskType === "sentence" && (
           <Field
             label="Исходное предложение"
             hint="Предложение, которое нужно перевести или преобразовать."
