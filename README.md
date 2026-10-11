@@ -2,7 +2,7 @@
 
 ЛИНГВА helps language learners understand why an answer was wrong. Enter the exercise, your answer, and the correct answer to get a clear breakdown of the mistake, a corrected form, and examples of the rule in use.
 
-The app is designed to explain mistakes, rather than grade work or act as a general-purpose chatbot. It supports word-building exercises, sentence translation or transformation, and fill-in-the-blank sentences with optional variants. Explanations can be requested in ten languages, and successful results are saved in your history for later review.
+The app is designed to explain mistakes, rather than grade work or act as a general-purpose chatbot. It supports word-building exercises, sentence translation or transformation, fill-in-the-blank sentences with optional variants, and test questions with answer variants. Explanations can be requested in ten languages, and successful results are saved in your history for later review.
 
 ## Why use ЛИНГВА
 

@@ -175,17 +175,22 @@ settings. Never put private request data in service-worker caches.
 Use these data shapes:
 
 ```ts
-type TaskType = 'words' | 'sentence' | 'paste-blank';
+type TaskType = 'words' | 'sentence' | 'paste-blank' | 'test';
 
 type BlankSegment =
   | { type: 'text'; text: string }
   | { type: 'blank'; variants: string[] };
 
+type TestTask = {
+  text: string;
+  variants: string[];
+};
+
 type HistoryItem = {
   id: string;
   createdAt: number;
   taskType: TaskType;
-  task: string | string[] | BlankSegment[];
+  task: string | string[] | BlankSegment[] | TestTask;
   userAnswer: string;
   correctAnswer: string;
   response: string;

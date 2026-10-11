@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { FormEvent } from "react";
 import { dateLabel, languageLabel, type HistoryItem, type TaskType } from "../lib";
 import { Field, Markdown } from "./ui";
-import { isDraftSentence, isDraftWords, isDraftPasteBlank, type Draft } from "./types";
+import { isDraftSentence, isDraftWords, isDraftPasteBlank, isDraftTest, type Draft } from "./types";
 
 interface ExplainPageProps {
   draft: Draft;
@@ -64,6 +64,14 @@ export default function ExplainPage({
             className={ isDraftPasteBlank(draft) ? "selected" : "" }
             onClick={ () => changeTaskType("paste-blank") }
           >Пропуски
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={ isDraftTest(draft) }
+            className={ isDraftTest(draft) ? "selected" : "" }
+            onClick={ () => changeTaskType("test") }
+          >Тест
           </button>
         </div>
         { isDraftWords(draft) && (
@@ -217,6 +225,58 @@ export default function ExplainPage({
                 ><span>＋</span> Пропуск
                 </button>
               </div>
+            </div>
+          </Field>
+        ) }
+        { isDraftTest(draft) && (
+          <Field
+            label="Вопрос теста"
+            hint="Сформулируйте задание теста, к которому даны варианты ответа."
+          >
+            <textarea
+              className="text-area source-area"
+              rows={ 3 }
+              value={ draft.testText }
+              onChange={ (event) => updateDraft("testText", event.target.value) }
+              placeholder="Введите вопрос теста…"
+            />
+          </Field>
+        ) }
+        { isDraftTest(draft) && (
+          <Field
+            label="Варианты ответа"
+            hint="Добавьте варианты, из которых нужно выбрать правильный ответ."
+          >
+            <div className="word-list">
+              { draft.testVariants.map((variant, index) => (
+                <div className="word-input" key={ index }>
+                  <span className="word-index">{ String(index + 1).padStart(2, "0") }</span>
+                  <input
+                    aria-label={ `Вариант ${ index + 1 }` }
+                    value={ variant }
+                    onChange={ (event) =>
+                      updateDraft(
+                        "testVariants",
+                        draft.testVariants.map((item, i) => (i === index ? event.target.value : item)),
+                      ) }
+                    placeholder={ index === 0 ? "например, went" : "Добавьте вариант" }
+                  />
+                  <button
+                    className="icon-button remove-word"
+                    type="button"
+                    disabled={ draft.testVariants.length <= 1 }
+                    onClick={ () => updateDraft("testVariants", draft.testVariants.filter((_, i) => i !== index)) }
+                    aria-label={ `Удалить вариант ${ index + 1 }` }
+                  >×
+                  </button>
+                </div>
+              )) }
+              <button
+                className="add-word"
+                type="button"
+                onClick={ () => updateDraft("testVariants", [...draft.testVariants, ""]) }
+              ><span>＋</span> Добавить вариант
+              </button>
             </div>
           </Field>
         ) }

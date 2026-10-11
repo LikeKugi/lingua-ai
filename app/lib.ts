@@ -1,4 +1,4 @@
-export type TaskType = "words" | "sentence" | "paste-blank";
+export type TaskType = "words" | "sentence" | "paste-blank" | "test";
 
 export function isWordsTask(taskType: TaskType): taskType is "words" {
   return taskType === "words";
@@ -12,15 +12,24 @@ export function isPasteBlankTask(taskType: TaskType): taskType is "paste-blank" 
   return taskType === "paste-blank";
 }
 
+export function isTestTask(taskType: TaskType): taskType is "test" {
+  return taskType === "test";
+}
+
 export type BlankSegment =
   | { type: "text"; text: string }
   | { type: "blank"; variants: string[] };
+
+export type TestTask = {
+  text: string;
+  variants: string[];
+};
 
 export type HistoryItem = {
   id: string;
   createdAt: number;
   taskType: TaskType;
-  task: string | string[] | BlankSegment[];
+  task: string | string[] | BlankSegment[] | TestTask;
   userAnswer: string;
   correctAnswer: string;
   response: string;
@@ -30,6 +39,9 @@ export type HistoryItem = {
 
 export function taskToText(task: HistoryItem["task"]): string {
   if (typeof task === "string") return task;
+  if (!Array.isArray(task) && typeof task === "object" && task !== null && "text" in task) {
+    return (task as TestTask).text.trim();
+  }
   if (!Array.isArray(task) || task.length === 0) return "";
   if (typeof task[0] === "string") {
     return (task as string[]).filter(Boolean).join(" · ");
@@ -109,7 +121,7 @@ export function buildMessages(input: {
   settings: Settings;
   prompts: PromptTemplate[];
   taskType: TaskType;
-  task: string | string[] | BlankSegment[];
+  task: string | string[] | BlankSegment[] | TestTask;
   userAnswer: string;
   correctAnswer: string;
 }) {
@@ -137,6 +149,13 @@ export function buildMessages(input: {
         .flatMap((segment) => segment.variants.map((variant) => variant.trim()).filter(Boolean));
       taskLine = `Задание: предложение с пропусками — «${sentence}»`;
       if (variants.length) taskLine += `\nВарианты для вставки в пропуски: [${variants.join(", ")}]`;
+      break;
+    }
+    case "test": {
+      const testTask = input.task as TestTask;
+      const testVariants = testTask.variants.filter(Boolean);
+      taskLine = `Задание (тест): ${testTask.text.trim()}`;
+      if (testVariants.length) taskLine += `\nВарианты ответа: [${testVariants.join(", ")}]`;
       break;
     }
     default: {

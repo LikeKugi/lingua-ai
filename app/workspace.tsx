@@ -13,7 +13,7 @@ import {
 import {
   BUILTIN_PROMPTS, defaultLanguage, defaultSettings, dateLabel,
   buildMessages, languageLabel, validBaseUrl, taskToText,
-  isWordsTask, isPasteBlankTask,
+  isWordsTask, isPasteBlankTask, isTestTask,
   type HistoryItem, type PromptTemplate, type Settings, type TaskType,
 } from './lib';
 import { Markdown } from './components/ui';
@@ -21,14 +21,14 @@ import {
   STORAGE_KEYS, readJson, readRaw, writeJson, writeRaw, removeKey,
 } from './utils/storage';
 import { maskSecret, unmaskSecret } from './utils/mask';
-import { isDraftWords, isDraftPasteBlank, type Draft, type Toast } from './components/types';
+import { isDraftWords, isDraftPasteBlank, isDraftTest, type Draft, type Toast } from './components/types';
 import ExplainPage from './components/ExplainPage';
 import HistoryPage from './components/HistoryPage';
 import PromptsPage from './components/PromptsPage';
 import InstructionPage from './components/InstructionPage';
 import SettingsPage from './components/SettingsPage';
 
-const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], sentence: '', blankTask: [], userAnswer: '', correctAnswer: '' });
+const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], sentence: '', blankTask: [], testText: '', testVariants: [], userAnswer: '', correctAnswer: '' });
 const PAGES = [
   { href: '/', title: 'Разбор', key: 'explain', symbol: '✳' },
   { href: '/history', title: 'История', key: 'history', symbol: '◷' },
@@ -189,6 +189,9 @@ export default function Workspace() {
       const hasText = draft.blankTask.some((segment) => segment.type === 'text' && segment.text.trim());
       const hasVariant = draft.blankTask.some((segment) => segment.type === 'blank' && segment.variants.some((variant) => variant.trim()));
       if (!hasBlank || (!hasText && !hasVariant)) needs.push('задание');
+    } else if (isDraftTest(draft)) {
+      if (!draft.testText.trim()) needs.push('вопрос теста');
+      if (!draft.testVariants.some((variant) => variant.trim())) needs.push('вариант ответа');
     } else if (!draft.sentence.trim()) {
       needs.push('задание');
     }
@@ -205,7 +208,8 @@ export default function Workspace() {
       ...blankDraft(),
       taskType,
       words: isWordsTask(taskType) ? ['', ''] : [],
-      blankTask: isPasteBlankTask(taskType) ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }] : []
+      blankTask: isPasteBlankTask(taskType) ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }] : [],
+      testVariants: isTestTask(taskType) ? ['', ''] : []
     });
   };
   const updateDraft = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({
@@ -219,6 +223,8 @@ export default function Workspace() {
     blankTask: isPasteBlankTask(current.taskType)
       ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }]
       : [],
+    testText: '',
+    testVariants: isTestTask(current.taskType) ? ['', ''] : [],
     userAnswer: '',
     correctAnswer: ''
   }));
@@ -320,7 +326,9 @@ export default function Workspace() {
         ? draft.words.map((word) => word.trim()).filter(Boolean)
         : isDraftPasteBlank(draft)
           ? draft.blankTask
-          : draft.sentence.trim();
+          : isDraftTest(draft)
+            ? { text: draft.testText.trim(), variants: draft.testVariants.map((variant) => variant.trim()).filter(Boolean) }
+            : draft.sentence.trim();
       const messages = buildMessages({
         settings,
         prompts,
@@ -572,7 +580,7 @@ export default function Workspace() {
                  aria-modal="true" aria-labelledby="history-modal-title">
             <div className="modal-head">
                 <div><span
-                    className="type-badge">{ isWordsTask(selectedHistory.taskType) ? 'СЛОВА' : isPasteBlankTask(selectedHistory.taskType) ? 'ПРОПУСКИ' : 'ПРЕДЛОЖЕНИЕ' }</span><h2
+                    className="type-badge">{ isWordsTask(selectedHistory.taskType) ? 'СЛОВА' : isPasteBlankTask(selectedHistory.taskType) ? 'ПРОПУСКИ' : isTestTask(selectedHistory.taskType) ? 'ТЕСТ' : 'ПРЕДЛОЖЕНИЕ' }</span><h2
                     id="history-modal-title">Разбор ошибки</h2>
                     <time>{ dateLabel(selectedHistory.createdAt) }</time>
                 </div>
