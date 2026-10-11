@@ -1,5 +1,17 @@
 export type TaskType = "words" | "sentence" | "paste-blank";
 
+export function isWordsTask(taskType: TaskType): taskType is "words" {
+  return taskType === "words";
+}
+
+export function isSentenceTask(taskType: TaskType): taskType is "sentence" {
+  return taskType === "sentence";
+}
+
+export function isPasteBlankTask(taskType: TaskType): taskType is "paste-blank" {
+  return taskType === "paste-blank";
+}
+
 export type BlankSegment =
   | { type: "text"; text: string }
   | { type: "blank"; variants: string[] };

@@ -1,4 +1,5 @@
 import type { BlankSegment, TaskType } from "../lib";
+import { isPasteBlankTask, isSentenceTask, isWordsTask } from "../lib";
 
 export type Draft = {
   taskType: TaskType;
@@ -9,16 +10,16 @@ export type Draft = {
   correctAnswer: string;
 };
 
-export function isDraftWords(draft: Draft): boolean {
-  return draft.taskType === "words";
+export function isDraftWords(draft: Draft): draft is Draft & { taskType: "words" } {
+  return isWordsTask(draft.taskType);
 }
 
-export function isDraftSentence(draft: Draft): boolean {
-  return draft.taskType === "sentence";
+export function isDraftSentence(draft: Draft): draft is Draft & { taskType: "sentence" } {
+  return isSentenceTask(draft.taskType);
 }
 
-export function isDraftPasteBlank(draft: Draft): boolean {
-  return draft.taskType === "paste-blank";
+export function isDraftPasteBlank(draft: Draft): draft is Draft & { taskType: "paste-blank" } {
+  return isPasteBlankTask(draft.taskType);
 }
 
 export type Toast = { text: string; kind: "success" | "error" | "info" };
