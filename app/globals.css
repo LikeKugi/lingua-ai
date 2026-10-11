@@ -77,7 +77,8 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: clamp(35px, 3.3vw
 .add-word { display: inline-flex; min-height: 39px; align-items: center; justify-self: start; gap: 7px; border: 1px dashed #c9c8ba; border-radius: 8px; padding: 0 13px; background: transparent; color: #677267; cursor: pointer; font-size: 12px; transition: border-color .18s ease, color .18s ease; }
 .add-word:hover { border-color: var(--forest); color: var(--forest); }
 .add-word span { font-size: 16px; }
-.blank-builder { display: grid; gap: 7px; }
+.blank-builder { display: grid; }
+.blank-builder > * { margin-bottom: 8px; }
 .blank-segment { display: grid; gap: 9px; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; background: #f8f7f1; }
 .blank-segment-head { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
 .blank-tag { display: inline-flex; align-items: center; min-height: 20px; border-radius: 20px; padding: 0 8px; background: var(--lime); color: var(--forest); font-size: 9px; font-weight: 700; letter-spacing: .08em; }
