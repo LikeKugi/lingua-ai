@@ -56,7 +56,7 @@ a { color: inherit; }
 .app-frame { min-height: 100vh; }
 .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 5; display: none; width: 248px; flex-direction: column; border-right: 1px solid #e0ded2; padding: 30px 20px 24px; background: rgba(243,241,233,.96); }
 .brand { display: inline-flex; align-items: center; gap: 11px; width: fit-content; color: var(--ink); text-decoration: none; font-family: var(--serif); font-size: var(--font-size-20); font-weight: 700; letter-spacing: .14em; }
-.brand-mark { display: inline-grid; width: 31px; height: 31px; place-items: center; border-radius: 10px 10px 10px 3px; background: var(--forest); color: var(--lime); font-family: var(--serif); font-size: var(--font-size-21); letter-spacing: 0; }
+.brand-mark { display: inline-grid; width: 31px; height: 31px; place-items: center; border-radius: 10px 10px 10px 3px; background: var(--forest); color: var(--lime); font-family: var(--serif); font-size: var(--font-size-21); line-height: 0; letter-spacing: 0; }
 .sidebar-caption, .eyebrow, .section-kicker { color: var(--muted); font-size: var(--font-size-10); font-weight: 700; letter-spacing: .13em; }
 .sidebar-caption { margin: 46px 0 12px 12px; font-size: var(--font-size-9); }
 .main-nav { display: grid; gap: 4px; }
