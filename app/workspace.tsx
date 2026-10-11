@@ -361,6 +361,66 @@ export default function Workspace() {
     }
   };
 
+  // Export the current configuration to a JSON file. Secrets (the provider base
+  // URL and API key) are written in their masked form so the file never contains
+  // plaintext credentials if it is shared or left on disk.
+  const exportSettings = async () => {
+    try {
+      const payload = {
+        app: 'lingva',
+        schema: 'settings:v1',
+        exportedAt: new Date().toISOString(),
+        settings: { ...settings, baseUrl: await maskSecret(settings.baseUrl) },
+        apiKey: await maskSecret(apiKey),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `lingva-settings-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      showToast('Настройки выгружены в файл. Секреты сохранены в замаскированном виде.', 'success');
+    } catch {
+      showToast('Не удалось выгрузить настройки.', 'error');
+    }
+  };
+
+  // Restore configuration from a previously exported file. The file carries
+  // masked secrets; we unmask them into memory so the app keeps working, while
+  // storage keeps them masked (baseUrl via the persist effect, apiKey below).
+  const importSettings = async (file: File) => {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text) as { settings?: Partial<Settings>; apiKey?: string };
+      if (!data || typeof data !== 'object') throw new Error('invalid');
+      const incoming = data.settings ?? {};
+      const maskedBaseUrl = typeof incoming.baseUrl === 'string' ? incoming.baseUrl : '';
+      const plainBaseUrl = await unmaskSecret(maskedBaseUrl);
+      setSettings((current) => {
+        const next: Settings = { ...current };
+        if ('baseUrl' in incoming) next.baseUrl = plainBaseUrl;
+        if (typeof incoming.model === 'string') next.model = incoming.model;
+        if (typeof incoming.language === 'string') next.language = incoming.language;
+        if (typeof incoming.suffix === 'string') next.suffix = incoming.suffix;
+        if (typeof incoming.systemPrompt === 'string') next.systemPrompt = incoming.systemPrompt;
+        return next;
+      });
+      const maskedApiKey = typeof data.apiKey === 'string' ? data.apiKey : '';
+      if (maskedApiKey) {
+        writeRaw(STORAGE_KEYS.apiKey, maskedApiKey);
+        const plainApiKey = await unmaskSecret(maskedApiKey);
+        setApiKey(plainApiKey);
+        setKeyDraft(plainApiKey);
+      }
+      showToast('Настройки импортированы. Секреты восстановлены в замаскированном виде.', 'success');
+    } catch {
+      showToast('Файл настроек повреждён или имеет неверный формат.', 'error');
+    }
+  };
+
   const titleByPage: Record<string, [string, string]> = {
     explain: ['Разбор', 'Задание, ваш ответ и правильный вариант — объяснение появится ниже.'],
     history: ['История', 'Сохранённые разборы остаются только в этом браузере.'],
@@ -463,6 +523,8 @@ export default function Workspace() {
           installInstructions={ installInstructions }
           saveKey={ saveKey }
           clearKey={ clearKey }
+          exportSettings={ exportSettings }
+          importSettings={ importSettings }
           setKeyDraft={ setKeyDraft }
           setKeyVisible={ setKeyVisible }
           setInstallPrompt={ setInstallPrompt }

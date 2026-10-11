@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Dispatch, SetStateAction } from "react";
+import { useRef, type Dispatch, type SetStateAction } from "react";
 import { LANGUAGES, type Settings } from "../lib";
 import { Field } from "./ui";
 
@@ -19,6 +19,8 @@ interface SettingsPageProps {
   installInstructions: string;
   saveKey: () => void;
   clearKey: () => void;
+  exportSettings: () => void;
+  importSettings: (file: File) => void;
   setKeyDraft: Dispatch<SetStateAction<string>>;
   setKeyVisible: Dispatch<SetStateAction<boolean>>;
   setInstallPrompt: Dispatch<SetStateAction<Event | null>>;
@@ -39,11 +41,14 @@ export default function SettingsPage({
   installInstructions,
   saveKey,
   clearKey,
+  exportSettings,
+  importSettings,
   setKeyDraft,
   setKeyVisible,
   setInstallPrompt,
   requestModels,
 }: SettingsPageProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   return (
     <section className="settings-grid">
       <div className="settings-main">
@@ -161,6 +166,39 @@ export default function SettingsPage({
                 placeholder="Например: используй короткие примеры из повседневной речи…"
               />
             </Field>
+          </div>
+        </section>
+        <section className="workspace-card settings-card">
+          <div className="card-heading">
+            <span className="card-index">03</span>
+            <div>
+              <h2>Экспорт и импорт</h2>
+              <p>Сохраните настройки в файл или восстановите их на другом устройстве.</p>
+            </div>
+          </div>
+          <p className="export-hint">Ключ API и адрес сервиса записываются в файл в замаскированном виде — в открытом тексте они не хранятся.</p>
+          <div className="inline-actions">
+            <button
+              type="button"
+              className="button button-outline button-small"
+              onClick={ exportSettings }
+            >Экспорт настроек</button>
+            <button
+              type="button"
+              className="button button-outline button-small"
+              onClick={ () => fileInputRef.current?.click() }
+            >Импорт настроек</button>
+            <input
+              ref={ fileInputRef }
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={ (event) => {
+                const file = event.target.files?.[0];
+                if (file) importSettings(file);
+                event.target.value = "";
+              } }
+            />
           </div>
         </section>
       </div>

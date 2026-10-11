@@ -222,6 +222,7 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: clamp(35px, 3.3vw
 .card-heading p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .settings-card .field { margin-bottom: 16px; }
 .settings-card .field:last-of-type { margin-bottom: 12px; }
+.export-hint { margin: 0 0 14px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .text-input { min-height: 42px; padding: 9px 12px; font-size: 13px; }
 .mono-input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 .key-field { position: relative; }
