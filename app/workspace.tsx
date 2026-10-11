@@ -16,6 +16,9 @@ import {
   type HistoryItem, type PromptTemplate, type Settings, type TaskType,
 } from './lib';
 import { Markdown } from './components/ui';
+import {
+  STORAGE_KEYS, readJson, readRaw, writeJson, writeRaw, removeKey,
+} from './utils/storage';
 import type { Draft, Toast } from './components/types';
 import ExplainPage from './components/ExplainPage';
 import HistoryPage from './components/HistoryPage';
@@ -70,22 +73,22 @@ export default function Workspace() {
   useEffect(() => {
     const hydrate = () => {
       try {
-        const savedSettings = localStorage.getItem('settings:v1');
-        const savedPrompts = localStorage.getItem('prompts:v1');
-        const savedHistory = localStorage.getItem('history:v1');
-        const savedDraft = localStorage.getItem('draft:v1');
-        const savedKey = localStorage.getItem('apiKey') ?? '';
-        const parsedSettings = savedSettings ? JSON.parse(savedSettings) as Partial<Settings> : {};
+        const savedSettings = readJson<Partial<Settings>>(STORAGE_KEYS.settings);
+        const savedPrompts = readJson<PromptTemplate[]>(STORAGE_KEYS.prompts);
+        const savedHistory = readJson<HistoryItem[]>(STORAGE_KEYS.history);
+        const savedDraft = readJson<Partial<Draft>>(STORAGE_KEYS.draft);
+        const savedKey = readRaw(STORAGE_KEYS.apiKey) ?? '';
+        const parsedSettings = savedSettings ?? {};
         setSettings({
           ...defaultSettings(), ...parsedSettings,
           language: parsedSettings.language ?? defaultLanguage()
         });
         if (savedPrompts) {
-          const parsed = JSON.parse(savedPrompts) as PromptTemplate[];
+          const parsed = savedPrompts;
           setPrompts([...BUILTIN_PROMPTS.map((builtin) => ({ ...builtin, ...(parsed.find((item) => item.id === builtin.id) ?? {}) })), ...parsed.filter((item) => !item.builtin)]);
         }
-        if (savedHistory) setHistory(JSON.parse(savedHistory) as HistoryItem[]);
-        if (savedDraft) setDraft({ ...blankDraft(), ...(JSON.parse(savedDraft) as Partial<Draft>) });
+        if (savedHistory) setHistory(savedHistory);
+        if (savedDraft) setDraft({ ...blankDraft(), ...savedDraft });
         setApiKey(savedKey);
         setKeyDraft(savedKey);
       } catch {
@@ -120,10 +123,10 @@ export default function Workspace() {
   useEffect(() => {
     if (!hydrated) return;
     try {
-      localStorage.setItem('settings:v1', JSON.stringify(settings));
-      localStorage.setItem('prompts:v1', JSON.stringify(prompts));
-      localStorage.setItem('history:v1', JSON.stringify(history));
-      localStorage.setItem('draft:v1', JSON.stringify(draft));
+      writeJson(STORAGE_KEYS.settings, settings);
+      writeJson(STORAGE_KEYS.prompts, prompts);
+      writeJson(STORAGE_KEYS.history, history);
+      writeJson(STORAGE_KEYS.draft, draft);
     } catch {
       window.setTimeout(() => showToast('Браузер не смог сохранить изменения. Освободите место в хранилище.', 'error'), 0);
     }
@@ -248,7 +251,7 @@ export default function Workspace() {
       setModels(found);
       if (keyDraft.trim()) {
         try {
-          localStorage.setItem('apiKey', key);
+          writeRaw(STORAGE_KEYS.apiKey, key);
           setApiKey(key);
           setKeyDraft(key);
         } catch {
@@ -329,7 +332,7 @@ export default function Workspace() {
   const saveKey = () => {
     try {
       if (keyDraft.trim()) {
-        localStorage.setItem('apiKey', keyDraft.trim());
+        writeRaw(STORAGE_KEYS.apiKey, keyDraft.trim());
         setApiKey(keyDraft.trim());
         showToast('Ключ сохранён в этом браузере.', 'success');
       } else showToast('Введите ключ API перед сохранением.', 'error');
@@ -340,7 +343,7 @@ export default function Workspace() {
   const clearKey = () => {
     if (!window.confirm('Удалить сохранённый ключ API из этого браузера?')) return;
     try {
-      localStorage.removeItem('apiKey');
+      removeKey(STORAGE_KEYS.apiKey);
       setApiKey('');
       setKeyDraft('');
       showToast('Ключ удалён.', 'success');
