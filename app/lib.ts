@@ -121,21 +121,27 @@ export function buildMessages(input: {
     `Ответ дай структурировано и на языке: ${label}.`,
   ].filter(Boolean);
   let taskLine: string;
-  if (isWordsTask(input.taskType)) {
-    taskLine = `Задание: составить предложение из слов: [${(input.task as string[]).map((word) => word.trim()).filter(Boolean).join(", ")}]`;
-  } else if (isPasteBlankTask(input.taskType)) {
-    const segments = input.task as BlankSegment[];
-    const sentence = segments
-      .map((segment) => (segment.type === "text" ? segment.text : "___"))
-      .join("")
-      .trim();
-    const variants = segments
-      .filter((segment): segment is Extract<BlankSegment, { type: "blank" }> => segment.type === "blank")
-      .flatMap((segment) => segment.variants.map((variant) => variant.trim()).filter(Boolean));
-    taskLine = `Задание: предложение с пропусками — «${sentence}»`;
-    if (variants.length) taskLine += `\nВарианты для вставки в пропуски: [${variants.join(", ")}]`;
-  } else {
-    taskLine = `Задание: исходное предложение — «${input.task}»`;
+  switch (input.taskType) {
+    case "words": {
+      taskLine = `Задание: составить предложение из слов: [${(input.task as string[]).map((word) => word.trim()).filter(Boolean).join(", ")}]`;
+      break;
+    }
+    case "paste-blank": {
+      const segments = input.task as BlankSegment[];
+      const sentence = segments
+        .map((segment) => (segment.type === "text" ? segment.text : "___"))
+        .join("")
+        .trim();
+      const variants = segments
+        .filter((segment): segment is Extract<BlankSegment, { type: "blank" }> => segment.type === "blank")
+        .flatMap((segment) => segment.variants.map((variant) => variant.trim()).filter(Boolean));
+      taskLine = `Задание: предложение с пропусками — «${sentence}»`;
+      if (variants.length) taskLine += `\nВарианты для вставки в пропуски: [${variants.join(", ")}]`;
+      break;
+    }
+    default: {
+      taskLine = `Задание: исходное предложение — «${input.task}»`;
+    }
   }
   return [
     { role: "system", content: promptSections.join("\n\n") },
