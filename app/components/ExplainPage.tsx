@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { FormEvent } from "react";
 import { dateLabel, languageLabel, type HistoryItem, type TaskType } from "../lib";
 import { Field, Markdown } from "./ui";
-import type { Draft } from "./types";
+import { isDraftSentence, isDraftWords, type Draft } from "./types";
 
 interface ExplainPageProps {
   draft: Draft;
@@ -44,21 +44,21 @@ export default function ExplainPage({
           <button
             type="button"
             role="tab"
-            aria-selected={ draft.taskType === "sentence" }
-            className={ draft.taskType === "sentence" ? "selected" : "" }
+            aria-selected={ isDraftSentence(draft) }
+            className={ isDraftSentence(draft) ? "selected" : "" }
             onClick={ () => changeTaskType("sentence") }
           >Предложение
           </button>
           <button
             type="button"
             role="tab"
-            aria-selected={ draft.taskType === "words" }
-            className={ draft.taskType === "words" ? "selected" : "" }
+            aria-selected={ isDraftWords(draft) }
+            className={ isDraftWords(draft) ? "selected" : "" }
             onClick={ () => changeTaskType("words") }
           >Слова
           </button>
         </div>
-        { draft.taskType === "words" && (
+        { isDraftWords(draft) && (
           <Field
             label="Слова для задания"
             hint="Введите слова или фразы, из которых нужно составить предложение."
@@ -102,7 +102,7 @@ export default function ExplainPage({
             </div>
           </Field>
         ) }
-        { draft.taskType === "sentence" && (
+        { isDraftSentence(draft) && (
           <Field
             label="Исходное предложение"
             hint="Предложение, которое нужно перевести или преобразовать."

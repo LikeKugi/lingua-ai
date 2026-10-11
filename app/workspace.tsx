@@ -20,7 +20,7 @@ import {
   STORAGE_KEYS, readJson, readRaw, writeJson, writeRaw, removeKey,
 } from './utils/storage';
 import { maskSecret, unmaskSecret } from './utils/mask';
-import type { Draft, Toast } from './components/types';
+import { isDraftWords, type Draft, type Toast } from './components/types';
 import ExplainPage from './components/ExplainPage';
 import HistoryPage from './components/HistoryPage';
 import PromptsPage from './components/PromptsPage';
@@ -181,7 +181,7 @@ export default function Workspace() {
 
   const missing = useMemo(() => {
     const needs = [];
-    if (!(draft.taskType === 'words' ? draft.words.some((word) => word.trim()) : draft.sentence.trim())) needs.push('задание');
+    if (!(isDraftWords(draft) ? draft.words.some((word) => word.trim()) : draft.sentence.trim())) needs.push('задание');
     if (!draft.userAnswer.trim()) needs.push('ваш вариант');
     if (!draft.correctAnswer.trim()) needs.push('правильный вариант');
     if (!apiKey.trim()) needs.push('ключ API');
@@ -296,7 +296,7 @@ export default function Workspace() {
     setExplanation(null);
     setExplanationError('');
     try {
-      const task = draft.taskType === 'words' ? draft.words.map((word) => word.trim()).filter(Boolean) : draft.sentence.trim();
+      const task = isDraftWords(draft) ? draft.words.map((word) => word.trim()).filter(Boolean) : draft.sentence.trim();
       const messages = buildMessages({
         settings,
         prompts,
