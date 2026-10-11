@@ -380,6 +380,24 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: var(--font-size-d
    The base sizes above are the smallest (mobile). Each wider breakpoint shifts
    the whole type scale up by a fixed amount: +1px (>=768), +4px (>=1024),
    +6px (>=1440), +8px (>=2560). On full-screen nothing renders below 12px. */
+
+/* Touch devices: bring tap targets up to the 44px AA floor without
+   altering the desktop (mouse) layout. */
+@media (pointer: coarse) {
+  .icon-button { width: 44px; height: 44px; }
+  .task-switch button { min-height: 44px; }
+  .add-word { min-height: 44px; }
+  .text-input { min-height: 44px; }
+  .key-toggle { height: 44px; }
+  .button-small { min-height: 44px; }
+  .button-quiet-danger { min-height: 44px; }
+  .switch { width: 44px; height: 26px; }
+  .switch span { width: 44px; height: 26px; }
+  .switch span::after { top: 4px; left: 4px; width: 18px; height: 18px; }
+  .switch input:checked + span::after { transform: translateX(22px); }
+  .toast button { width: 32px; height: 32px; }
+}
+
 @media (min-width: 768px) {
   :root {
     --font-size-8: 9px;
