@@ -19,6 +19,7 @@ import { Markdown } from './components/ui';
 import {
   STORAGE_KEYS, readJson, readRaw, writeJson, writeRaw, removeKey,
 } from './utils/storage';
+import { maskSecret, unmaskSecret } from './utils/mask';
 import type { Draft, Toast } from './components/types';
 import ExplainPage from './components/ExplainPage';
 import HistoryPage from './components/HistoryPage';
@@ -71,16 +72,18 @@ export default function Workspace() {
   };
 
   useEffect(() => {
-    const hydrate = () => {
+    const hydrate = async () => {
       try {
         const savedSettings = readJson<Partial<Settings>>(STORAGE_KEYS.settings);
         const savedPrompts = readJson<PromptTemplate[]>(STORAGE_KEYS.prompts);
         const savedHistory = readJson<HistoryItem[]>(STORAGE_KEYS.history);
         const savedDraft = readJson<Partial<Draft>>(STORAGE_KEYS.draft);
-        const savedKey = readRaw(STORAGE_KEYS.apiKey) ?? '';
+        const savedKey = await unmaskSecret(readRaw(STORAGE_KEYS.apiKey) ?? '');
         const parsedSettings = savedSettings ?? {};
+        const restoredBaseUrl = await unmaskSecret(parsedSettings.baseUrl ?? '');
         setSettings({
           ...defaultSettings(), ...parsedSettings,
+          baseUrl: restoredBaseUrl,
           language: parsedSettings.language ?? defaultLanguage()
         });
         if (savedPrompts) {
@@ -100,7 +103,7 @@ export default function Workspace() {
       else if (/android/i.test(navigator.userAgent)) setInstallInstructions('В меню Chrome выберите «Установить приложение» или «Добавить на главный экран». Для опубликованного сайта нужен HTTPS; localhost подходит для разработки.');
       else setInstallInstructions('В меню браузера выберите «Установить приложение» или «Добавить на главный экран». Для опубликованного сайта нужен HTTPS; localhost подходит для разработки.');
     };
-    const hydrationTimer = window.setTimeout(hydrate, 0);
+    const hydrationTimer = window.setTimeout(() => { void hydrate(); }, 0);
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => undefined);
     const onOnline = () => setOnline(true);
     const onOffline = () => setOnline(false);
@@ -122,14 +125,20 @@ export default function Workspace() {
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      writeJson(STORAGE_KEYS.settings, settings);
-      writeJson(STORAGE_KEYS.prompts, prompts);
-      writeJson(STORAGE_KEYS.history, history);
-      writeJson(STORAGE_KEYS.draft, draft);
-    } catch {
-      window.setTimeout(() => showToast('Браузер не смог сохранить изменения. Освободите место в хранилище.', 'error'), 0);
-    }
+    // Mask the provider base URL at rest; the in-memory `settings` keeps the
+    // plaintext value used synchronously throughout the app.
+    const persist = async () => {
+      try {
+        const storedSettings = { ...settings, baseUrl: await maskSecret(settings.baseUrl) };
+        writeJson(STORAGE_KEYS.settings, storedSettings);
+        writeJson(STORAGE_KEYS.prompts, prompts);
+        writeJson(STORAGE_KEYS.history, history);
+        writeJson(STORAGE_KEYS.draft, draft);
+      } catch {
+        window.setTimeout(() => showToast('Браузер не смог сохранить изменения. Освободите место в хранилище.', 'error'), 0);
+      }
+    };
+    void persist();
   }, [hydrated, settings, prompts, history, draft]);
 
   useEffect(() => {
@@ -251,7 +260,7 @@ export default function Workspace() {
       setModels(found);
       if (keyDraft.trim()) {
         try {
-          writeRaw(STORAGE_KEYS.apiKey, key);
+          writeRaw(STORAGE_KEYS.apiKey, await maskSecret(key));
           setApiKey(key);
           setKeyDraft(key);
         } catch {
@@ -329,10 +338,10 @@ export default function Workspace() {
     }
   };
 
-  const saveKey = () => {
+  const saveKey = async () => {
     try {
       if (keyDraft.trim()) {
-        writeRaw(STORAGE_KEYS.apiKey, keyDraft.trim());
+        writeRaw(STORAGE_KEYS.apiKey, await maskSecret(keyDraft.trim()));
         setApiKey(keyDraft.trim());
         showToast('Ключ сохранён в этом браузере.', 'success');
       } else showToast('Введите ключ API перед сохранением.', 'error');
