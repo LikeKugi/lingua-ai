@@ -51,3 +51,13 @@ npm run lint     # Run ESLint
 - **Промпты** — manage built-in and custom explanation rules.
 - **Инструкция** — edit the base system instruction.
 - **Настройки** — configure the provider, model, response language, and optional prompt suffix.
+
+## Screenshots
+
+**Разбор** — submit an exercise and receive a breakdown of the mistake.
+
+![Разбор — explanation page](screenshots/explanation-page.png)
+
+**Промпты** — manage built-in and custom explanation rules.
+
+![Промпты — prompts page](screenshots/prompts-page.png)
