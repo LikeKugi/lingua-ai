@@ -189,6 +189,12 @@ export default function Workspace() {
     ...current,
     [key]: value
   }));
+  const clearDraft = () => setDraft(blankDraft());
+  const startNextExplanation = () => {
+    setDraft(blankDraft());
+    setExplanation(null);
+    setExplanationError('');
+  };
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => setSettings((current) => ({
     ...current,
     [key]: value
@@ -403,6 +409,8 @@ export default function Workspace() {
           updateDraft={ updateDraft }
           changeTaskType={ changeTaskType }
           explain={ explain }
+          clearDraft={ clearDraft }
+          startNextExplanation={ startNextExplanation }
         /> }
 
 

@@ -126,6 +126,7 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: clamp(35px, 3.3vw
 .markdown strong { color: var(--ink); font-weight: 700; }
 .markdown code { border-radius: 4px; padding: 2px 5px; background: #f0efe8; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
 .result-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 21px; border-top: 1px solid var(--line); padding-top: 13px; color: #858b80; font-size: 10px; }
+.result-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
 
 /* History */
 .button-quiet-danger { min-height: 38px; border: 1px solid #e7d2cb; padding: 0 14px; background: transparent; color: var(--coral); font-size: 12px; }

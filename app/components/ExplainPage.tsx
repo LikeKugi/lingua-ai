@@ -18,6 +18,8 @@ interface ExplainPageProps {
   updateDraft: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
   changeTaskType: (taskType: TaskType) => void;
   explain: (event: FormEvent) => void;
+  clearDraft: () => void;
+  startNextExplanation: () => void;
 }
 
 export default function ExplainPage({
@@ -32,6 +34,8 @@ export default function ExplainPage({
   updateDraft,
   changeTaskType,
   explain,
+  clearDraft,
+  startNextExplanation,
 }: ExplainPageProps) {
   return (
     <section className="explain-page">
@@ -149,6 +153,12 @@ export default function ExplainPage({
             <span>{ requestBusy ? "Разбираем ошибку…" : "Разобрать ошибку" }</span>
             <span className="button-arrow" aria-hidden="true">↗</span>
           </button>
+          <button
+            className="button button-outline"
+            type="button"
+            onClick={ clearDraft }
+          >Очистить поля
+          </button>
           <span className="submit-caption">Ваши ответы сохраняются в истории на этом устройстве.</span>
         </div>
       </form>
@@ -163,25 +173,35 @@ export default function ExplainPage({
         </div>
       ) }
       { explanation && (
-        <article className="workspace-card result-card">
-          <div className="result-top">
-            <div>
-              <p className="eyebrow">РАЗБОР ОШИБКИ</p>
-              <h2>Почему ответ отличается</h2>
+        <>
+          <article className="workspace-card result-card">
+            <div className="result-top">
+              <div>
+                <p className="eyebrow">РАЗБОР ОШИБКИ</p>
+                <h2>Почему ответ отличается</h2>
+              </div>
+              <span className="result-date">{ dateLabel(explanation.createdAt) }</span>
             </div>
-            <span className="result-date">{ dateLabel(explanation.createdAt) }</span>
+            <div className="result-rule" />
+            <div className="result-answers">
+              <div><span>ВАШ ВАРИАНТ</span><p>{ explanation.userAnswer }</p></div>
+              <div><span>ПРАВИЛЬНО</span><p>{ explanation.correctAnswer }</p></div>
+            </div>
+            <Markdown source={ explanation.response } />
+            <div className="result-meta">
+              <span>{ explanation.model }</span><span>·</span>
+              <span>Ответ на языке: { languageLabel(explanation.language) }</span>
+            </div>
+          </article>
+          <div className="result-actions">
+            <button
+              className="button button-outline"
+              type="button"
+              onClick={ startNextExplanation }
+            >Следующий разбор
+            </button>
           </div>
-          <div className="result-rule" />
-          <div className="result-answers">
-            <div><span>ВАШ ВАРИАНТ</span><p>{ explanation.userAnswer }</p></div>
-            <div><span>ПРАВИЛЬНО</span><p>{ explanation.correctAnswer }</p></div>
-          </div>
-          <Markdown source={ explanation.response } />
-          <div className="result-meta">
-            <span>{ explanation.model }</span><span>·</span>
-            <span>Ответ на языке: { languageLabel(explanation.language) }</span>
-          </div>
-        </article>
+        </>
       ) }
       { !explanation && !requestBusy &&
         <div className="quiet-note">
