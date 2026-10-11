@@ -39,6 +39,9 @@
   --font-size-35: 35px;
   --font-size-display: clamp(35px, 3.3vw, 43px);
   --font-size-code: .9em;
+
+  /* Content width cap; bumped to 1440px on very wide screens (see >=1440px query). */
+  --content-max: 1110px;
 }
 
 * { box-sizing: border-box; }
@@ -70,7 +73,7 @@ a { color: inherit; }
 .offline .status-dot { background: var(--coral); }
 .sidebar-bottom p { max-width: 190px; margin: 12px 0 0; color: var(--muted); font-size: var(--font-size-11); line-height: 1.6; }
 .app-main { min-height: 100vh; margin-left: 0; }
-.main-content { width: min(100%, 1110px); margin: 0 auto; padding: 46px clamp(28px, 5.5vw, 76px) 80px; }
+.main-content { width: min(100%, var(--content-max)); margin: 0 auto; padding: 46px clamp(28px, 5.5vw, 76px) 80px; }
 .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin: 0 0 28px; }
 .eyebrow { margin: 0 0 12px; }
 .eyebrow span { margin: 0 8px; color: #b2b2a5; }
@@ -539,7 +542,14 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: var(--font-size-d
     --font-size-32: 38px;
     --font-size-35: 41px;
     --font-size-display: clamp(41px, 3.3vw, 49px);
+
+    /* Widen the content cap so the shell and pages fill wide monitors. */
+    --content-max: 1440px;
   }
+  .explain-page,
+  .history-list,
+  .instruction-page,
+  .prompt-list { max-width: 1440px; }
 }
 @media (min-width: 2560px) {
   :root {
