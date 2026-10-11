@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { FormEvent } from "react";
 import { dateLabel, languageLabel, type HistoryItem, type TaskType } from "../lib";
 import { Field, Markdown } from "./ui";
-import { isDraftSentence, isDraftWords, type Draft } from "./types";
+import { isDraftSentence, isDraftWords, isDraftPasteBlank, type Draft } from "./types";
 
 interface ExplainPageProps {
   draft: Draft;
@@ -56,6 +56,14 @@ export default function ExplainPage({
             className={ isDraftWords(draft) ? "selected" : "" }
             onClick={ () => changeTaskType("words") }
           >Слова
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={ isDraftPasteBlank(draft) }
+            className={ isDraftPasteBlank(draft) ? "selected" : "" }
+            onClick={ () => changeTaskType("paste-blank") }
+          >Пропуски
           </button>
         </div>
         { isDraftWords(draft) && (
@@ -114,6 +122,102 @@ export default function ExplainPage({
               onChange={ (event) => updateDraft("sentence", event.target.value) }
               placeholder="Введите исходное предложение…"
             />
+          </Field>
+        ) }
+        { isDraftPasteBlank(draft) && (
+          <Field
+            label="Предложение с пропусками"
+            hint="Чередуйте текст и пропуски. В пропусках можно указать варианты для вставки — или оставить пустым и записать свой и правильный ответ ниже."
+          >
+            <div className="blank-builder">
+              { draft.blankTask.map((segment, index) => (
+                segment.type === "text" ? (
+                  <div className="word-input" key={ index }>
+                    <span className="word-index" aria-hidden="true">Т</span>
+                    <input
+                      aria-label={ `Текст ${ index + 1 }` }
+                      value={ segment.text }
+                      onChange={ (event) =>
+                        updateDraft(
+                          "blankTask",
+                          draft.blankTask.map((item, i) =>
+                            (i === index ? { type: "text", text: event.target.value } : item)),
+                        ) }
+                      placeholder="текст предложения…"
+                    />
+                    <button
+                      className="icon-button remove-word"
+                      type="button"
+                      disabled={ draft.blankTask.length <= 1 }
+                      onClick={ () => updateDraft("blankTask", draft.blankTask.filter((_, i) => i !== index)) }
+                      aria-label={ `Удалить текст ${ index + 1 }` }
+                    >×
+                    </button>
+                  </div>
+                ) : (
+                  <div className="blank-segment" key={ index }>
+                    <div className="blank-segment-head">
+                      <span className="blank-tag" aria-hidden="true">ПРОПУСК</span>
+                      <button
+                        className="icon-button remove-word"
+                        type="button"
+                        disabled={ draft.blankTask.length <= 1 }
+                        onClick={ () => updateDraft("blankTask", draft.blankTask.filter((_, i) => i !== index)) }
+                        aria-label={ `Удалить пропуск ${ index + 1 }` }
+                      >×
+                      </button>
+                    </div>
+                    <div className="variant-list">
+                      { segment.variants.map((variant, vi) => (
+                        <div className="word-input variant-input" key={ vi }>
+                          <span className="word-index" aria-hidden="true">{ String(vi + 1).padStart(2, "0") }</span>
+                          <input
+                            aria-label={ `Вариант ${ vi + 1 } для пропуска ${ index + 1 }` }
+                            value={ variant }
+                            onChange={ (event) =>
+                              updateDraft(
+                                "blankTask",
+                                draft.blankTask.map((item, i) =>
+                                  (i === index && item.type === "blank")
+                                    ? { type: "blank", variants: item.variants.map((v, j) => (j === vi ? event.target.value : v)) }
+                                    : item),
+                              ) }
+                            placeholder="вариант (необязательно)"
+                          />
+                          <button
+                            className="icon-button remove-word"
+                            type="button"
+                            onClick={ () => updateDraft("blankTask", draft.blankTask.map((item, i) => (i === index && item.type === "blank") ? { type: "blank", variants: item.variants.filter((_, j) => j !== vi) } : item)) }
+                            aria-label={ `Удалить вариант ${ vi + 1 }` }
+                          >×
+                          </button>
+                        </div>
+                      )) }
+                      <button
+                        className="add-word"
+                        type="button"
+                        onClick={ () => updateDraft("blankTask", draft.blankTask.map((item, i) => (i === index && item.type === "blank") ? { type: "blank", variants: [...item.variants, ""] } : item)) }
+                      ><span>＋</span> Добавить вариант
+                      </button>
+                    </div>
+                  </div>
+                )
+              )) }
+              <div className="blank-add-row">
+                <button
+                  className="add-word"
+                  type="button"
+                  onClick={ () => updateDraft("blankTask", [...draft.blankTask, { type: "text", text: "" }]) }
+                ><span>＋</span> Текст
+                </button>
+                <button
+                  className="add-word"
+                  type="button"
+                  onClick={ () => updateDraft("blankTask", [...draft.blankTask, { type: "blank", variants: [] }]) }
+                ><span>＋</span> Пропуск
+                </button>
+              </div>
+            </div>
           </Field>
         ) }
         <div className="answer-grid">

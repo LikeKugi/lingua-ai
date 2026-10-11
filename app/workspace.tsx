@@ -12,7 +12,7 @@ import {
 } from 'react';
 import {
   BUILTIN_PROMPTS, defaultLanguage, defaultSettings, dateLabel,
-  buildMessages, languageLabel, validBaseUrl,
+  buildMessages, languageLabel, validBaseUrl, taskToText,
   type HistoryItem, type PromptTemplate, type Settings, type TaskType,
 } from './lib';
 import { Markdown } from './components/ui';
@@ -20,14 +20,14 @@ import {
   STORAGE_KEYS, readJson, readRaw, writeJson, writeRaw, removeKey,
 } from './utils/storage';
 import { maskSecret, unmaskSecret } from './utils/mask';
-import { isDraftWords, type Draft, type Toast } from './components/types';
+import { isDraftWords, isDraftPasteBlank, type Draft, type Toast } from './components/types';
 import ExplainPage from './components/ExplainPage';
 import HistoryPage from './components/HistoryPage';
 import PromptsPage from './components/PromptsPage';
 import InstructionPage from './components/InstructionPage';
 import SettingsPage from './components/SettingsPage';
 
-const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], sentence: '', userAnswer: '', correctAnswer: '' });
+const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], sentence: '', blankTask: [], userAnswer: '', correctAnswer: '' });
 const PAGES = [
   { href: '/', title: 'Разбор', key: 'explain', symbol: '✳' },
   { href: '/history', title: 'История', key: 'history', symbol: '◷' },
@@ -181,7 +181,16 @@ export default function Workspace() {
 
   const missing = useMemo(() => {
     const needs = [];
-    if (!(isDraftWords(draft) ? draft.words.some((word) => word.trim()) : draft.sentence.trim())) needs.push('задание');
+    if (isDraftWords(draft)) {
+      if (!draft.words.some((word) => word.trim())) needs.push('задание');
+    } else if (isDraftPasteBlank(draft)) {
+      const hasBlank = draft.blankTask.some((segment) => segment.type === 'blank');
+      const hasText = draft.blankTask.some((segment) => segment.type === 'text' && segment.text.trim());
+      const hasVariant = draft.blankTask.some((segment) => segment.type === 'blank' && segment.variants.some((variant) => variant.trim()));
+      if (!hasBlank || (!hasText && !hasVariant)) needs.push('задание');
+    } else if (!draft.sentence.trim()) {
+      needs.push('задание');
+    }
     if (!draft.userAnswer.trim()) needs.push('ваш вариант');
     if (!draft.correctAnswer.trim()) needs.push('правильный вариант');
     if (!apiKey.trim()) needs.push('ключ API');
@@ -194,7 +203,8 @@ export default function Workspace() {
     if (draft.taskType !== taskType) setDraft({
       ...blankDraft(),
       taskType,
-      words: taskType === 'words' ? ['', ''] : []
+      words: taskType === 'words' ? ['', ''] : [],
+      blankTask: taskType === 'paste-blank' ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }] : []
     });
   };
   const updateDraft = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({
@@ -296,7 +306,11 @@ export default function Workspace() {
     setExplanation(null);
     setExplanationError('');
     try {
-      const task = isDraftWords(draft) ? draft.words.map((word) => word.trim()).filter(Boolean) : draft.sentence.trim();
+      const task = isDraftWords(draft)
+        ? draft.words.map((word) => word.trim()).filter(Boolean)
+        : isDraftPasteBlank(draft)
+          ? draft.blankTask
+          : draft.sentence.trim();
       const messages = buildMessages({
         settings,
         prompts,
@@ -548,7 +562,7 @@ export default function Workspace() {
                  aria-modal="true" aria-labelledby="history-modal-title">
             <div className="modal-head">
                 <div><span
-                    className="type-badge">{ selectedHistory.taskType === 'words' ? 'СЛОВА' : 'ПРЕДЛОЖЕНИЕ' }</span><h2
+                    className="type-badge">{ selectedHistory.taskType === 'words' ? 'СЛОВА' : selectedHistory.taskType === 'paste-blank' ? 'ПРОПУСКИ' : 'ПРЕДЛОЖЕНИЕ' }</span><h2
                     id="history-modal-title">Разбор ошибки</h2>
                     <time>{ dateLabel(selectedHistory.createdAt) }</time>
                 </div>
@@ -557,7 +571,7 @@ export default function Workspace() {
                 </button>
             </div>
             <div className="modal-task"><span>ЗАДАНИЕ</span>
-                <p>{ Array.isArray(selectedHistory.task) ? selectedHistory.task.filter(Boolean).join(' · ') : selectedHistory.task }</p>
+                <p>{ taskToText(selectedHistory.task) }</p>
             </div>
             <div className="result-answers">
                 <div><span>ВАШ ВАРИАНТ</span><p>{ selectedHistory.userAnswer }</p></div>

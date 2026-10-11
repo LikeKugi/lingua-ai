@@ -1,16 +1,32 @@
-export type TaskType = "words" | "sentence";
+export type TaskType = "words" | "sentence" | "paste-blank";
+
+export type BlankSegment =
+  | { type: "text"; text: string }
+  | { type: "blank"; variants: string[] };
 
 export type HistoryItem = {
   id: string;
   createdAt: number;
   taskType: TaskType;
-  task: string | string[];
+  task: string | string[] | BlankSegment[];
   userAnswer: string;
   correctAnswer: string;
   response: string;
   model: string;
   language: string;
 };
+
+export function taskToText(task: HistoryItem["task"]): string {
+  if (typeof task === "string") return task;
+  if (!Array.isArray(task) || task.length === 0) return "";
+  if (typeof task[0] === "string") {
+    return (task as string[]).filter(Boolean).join(" · ");
+  }
+  return (task as BlankSegment[])
+    .map((segment) => (segment.type === "text" ? segment.text : "___"))
+    .join("")
+    .trim();
+}
 
 export type PromptTemplate = {
   id: string;
@@ -81,7 +97,7 @@ export function buildMessages(input: {
   settings: Settings;
   prompts: PromptTemplate[];
   taskType: TaskType;
-  task: string | string[];
+  task: string | string[] | BlankSegment[];
   userAnswer: string;
   correctAnswer: string;
 }) {
@@ -92,9 +108,23 @@ export function buildMessages(input: {
     input.settings.suffix.trim(),
     `Ответ дай структурировано и на языке: ${label}.`,
   ].filter(Boolean);
-  const taskLine = input.taskType === "words"
-    ? `Задание: составить предложение из слов: [${(input.task as string[]).map((word) => word.trim()).filter(Boolean).join(", ")}]`
-    : `Задание: исходное предложение — «${input.task}»`;
+  let taskLine: string;
+  if (input.taskType === "words") {
+    taskLine = `Задание: составить предложение из слов: [${(input.task as string[]).map((word) => word.trim()).filter(Boolean).join(", ")}]`;
+  } else if (input.taskType === "paste-blank") {
+    const segments = input.task as BlankSegment[];
+    const sentence = segments
+      .map((segment) => (segment.type === "text" ? segment.text : "___"))
+      .join("")
+      .trim();
+    const variants = segments
+      .filter((segment): segment is Extract<BlankSegment, { type: "blank" }> => segment.type === "blank")
+      .flatMap((segment) => segment.variants.map((variant) => variant.trim()).filter(Boolean));
+    taskLine = `Задание: предложение с пропусками — «${sentence}»`;
+    if (variants.length) taskLine += `\nВарианты для вставки в пропуски: [${variants.join(", ")}]`;
+  } else {
+    taskLine = `Задание: исходное предложение — «${input.task}»`;
+  }
   return [
     { role: "system", content: promptSections.join("\n\n") },
     { role: "user", content: `${taskLine}\nМой вариант: «${input.userAnswer.trim()}»\nПравильный вариант: «${input.correctAnswer.trim()}»\n\nОбъясни, в чём именно я ошибся: разбери грамматику, синтаксис и лексику.\nОтвет дай структурировано и на языке: ${label}.` },

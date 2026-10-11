@@ -54,10 +54,13 @@ keyboard, and touch.
 
 ### Разбор (Explain)
 
-- Offer two task types: **Слова** (make a sentence from a set of words) and **Предложение** (translate or transform a
-  source sentence). Start in word mode with two empty word inputs.
+- Offer three task types: **Слова** (make a sentence from a set of words), **Предложение** (translate or transform a
+  source sentence), and **Пропуски** (paste a sentence with blanks). Start in word mode with two empty word inputs.
 - In word mode, allow users to add inputs and remove any input while always keeping at least one. Ignore blank word
-  inputs when building the request. In sentence mode, use one multiline source-sentence input.
+  inputs when building the request. In sentence mode, use one multiline source-sentence input. In **Пропуски** mode,
+  let users build the sentence from alternating text and blank segments; each blank may carry optional variant words for
+  insertion. A blank task is valid only when it has at least one blank and some text or at least one variant. Switching
+  task type clears the task and both answer fields.
 - Include multiline fields for **Ваш вариант** and **Правильный вариант**. Switching task type clears the task and both
   answer fields.
 - Disable **Разобрать ошибку** until the task, learner answer, correct answer, API key, base URL, and model are present.
@@ -172,13 +175,17 @@ settings. Never put private request data in service-worker caches.
 Use these data shapes:
 
 ```ts
-type TaskType = 'words' | 'sentence';
+type TaskType = 'words' | 'sentence' | 'paste-blank';
+
+type BlankSegment =
+  | { type: 'text'; text: string }
+  | { type: 'blank'; variants: string[] };
 
 type HistoryItem = {
   id: string;
   createdAt: number;
   taskType: TaskType;
-  task: string | string[];
+  task: string | string[] | BlankSegment[];
   userAnswer: string;
   correctAnswer: string;
   response: string;

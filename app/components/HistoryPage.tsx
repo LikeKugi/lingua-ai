@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type ChangeEvent, type Dispatch, type SetStateAction, useRef, useState } from "react";
-import { dateLabel, languageLabel, type HistoryItem } from "../lib";
+import { dateLabel, languageLabel, taskToText, type HistoryItem } from "../lib";
 import type { Toast } from "./types";
 
 interface HistoryPageProps {
@@ -21,7 +21,7 @@ const isHistoryItem = (value: unknown): value is HistoryItem => {
   return (
     typeof record.id === "string" &&
     typeof record.createdAt === "number" &&
-    (record.taskType === "words" || record.taskType === "sentence") &&
+    (record.taskType === "words" || record.taskType === "sentence" || record.taskType === "paste-blank") &&
     (typeof record.task === "string" || Array.isArray(record.task)) &&
     typeof record.userAnswer === "string" &&
     typeof record.correctAnswer === "string" &&
@@ -152,10 +152,10 @@ export default function HistoryPage({
               aria-label={ `Открыть разбор от ${ dateLabel(item.createdAt) }` }
             >
               <div className="history-card-top">
-                <span className="type-badge">{ item.taskType === "words" ? "СЛОВА" : "ПРЕДЛОЖЕНИЕ" }</span>
+                <span className="type-badge">{ item.taskType === "words" ? "СЛОВА" : item.taskType === "paste-blank" ? "ПРОПУСКИ" : "ПРЕДЛОЖЕНИЕ" }</span>
                 <time>{ dateLabel(item.createdAt) }</time>
               </div>
-              <h2>{ Array.isArray(item.task) ? item.task.filter(Boolean).join(" · ") : item.task }</h2>
+              <h2>{ taskToText(item.task) }</h2>
               <p className="history-answer"><span>ВАШ ОТВЕТ</span> { item.userAnswer }</p>
               <p className="history-preview">
                 { item.response.replace(/[#*_`]/g, "").slice(0, 190) }{ item.response.length > 190 ? "…" : "" }
