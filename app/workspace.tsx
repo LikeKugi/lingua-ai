@@ -211,7 +211,16 @@ export default function Workspace() {
     ...current,
     [key]: value
   }));
-  const clearDraft = () => setDraft(blankDraft());
+  const clearDraft = () => setDraft((current) => ({
+    taskType: current.taskType,
+    words: current.taskType === 'words' ? ['', ''] : [],
+    sentence: '',
+    blankTask: current.taskType === 'paste-blank'
+      ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }]
+      : [],
+    userAnswer: '',
+    correctAnswer: ''
+  }));
   const startNextExplanation = () => {
     setDraft(blankDraft());
     setExplanation(null);
