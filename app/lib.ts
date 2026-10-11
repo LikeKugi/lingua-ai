@@ -42,7 +42,7 @@ export function taskToText(task: HistoryItem["task"]): string {
   if (!Array.isArray(task) && typeof task === "object" && task !== null && "text" in task) {
     return (task as TestTask).text.trim();
   }
-  if (!Array.isArray(task) || task.length === 0) return "";
+  if (!Array.isArray(task) || !task?.length) return "";
   if (typeof task[0] === "string") {
     return (task as string[]).filter(Boolean).join(" · ");
   }
