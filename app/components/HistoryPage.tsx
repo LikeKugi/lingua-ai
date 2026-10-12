@@ -39,6 +39,12 @@ export default function HistoryPage({
 }: HistoryPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImport, setPendingImport] = useState<HistoryItem[] | null>(null);
+  const [markUnpracticed, setMarkUnpracticed] = useState(false);
+
+  const closeImport = () => {
+    setPendingImport(null);
+    setMarkUnpracticed(false);
+  };
 
   const exportHistory = () => {
     if (history.length === 0) {
@@ -82,6 +88,7 @@ export default function HistoryPage({
           return;
         }
         setPendingImport(items.map((item) => ({ ...item, isPracticed: item.isPracticed ?? false })));
+        setMarkUnpracticed(false);
       } catch {
         showToast("Не удалось прочитать файл. Проверьте, что это корректный экспорт истории.", "error");
       }
@@ -93,22 +100,28 @@ export default function HistoryPage({
   };
 
   const extendHistory = (incoming: HistoryItem[]) => {
+    const items = markUnpracticed
+      ? incoming.map((item) => ({ ...item, isPracticed: false }))
+      : incoming;
     const byId = new Map<string, HistoryItem>();
     for (const item of history) byId.set(item.id, item);
     // Imported records win on id collision.
-    for (const item of incoming) byId.set(item.id, item);
+    for (const item of items) byId.set(item.id, item);
     const merged = sortByDateDesc(Array.from(byId.values()));
     setHistory(merged);
     setSelectedHistory(null);
-    setPendingImport(null);
+    closeImport();
     showToast(`Импортировано разборов: ${incoming.length}. Всего в истории: ${merged.length}.`, "success");
   };
 
   const replaceHistory = (incoming: HistoryItem[]) => {
-    const replaced = sortByDateDesc(incoming);
+    const items = markUnpracticed
+      ? incoming.map((item) => ({ ...item, isPracticed: false }))
+      : incoming;
+    const replaced = sortByDateDesc(items);
     setHistory(replaced);
     setSelectedHistory(null);
-    setPendingImport(null);
+    closeImport();
     showToast(`История заменена. Загружено разборов: ${replaced.length}.`, "success");
   };
 
@@ -182,7 +195,7 @@ export default function HistoryPage({
       { pendingImport && (
         <div
           className="modal-backdrop"
-          onMouseDown={ (event) => { if (event.target === event.currentTarget) setPendingImport(null); } }
+          onMouseDown={ (event) => { if (event.target === event.currentTarget) closeImport(); } }
         >
           <section
             className="history-modal workspace-card import-modal"
@@ -197,6 +210,17 @@ export default function HistoryPage({
                 <p className="page-lede">Найдено разборов: { pendingImport.length }. Как поступить с ними?</p>
               </div>
             </div>
+            <label className="import-option">
+              <input
+                type="checkbox"
+                checked={ markUnpracticed }
+                onChange={ () => setMarkUnpracticed((value) => !value) }
+              />
+              <span>
+                <span className="import-option-title">Снять отметку «практиковано» со всех импортируемых разборов</span>
+                <span className="import-option-hint">Снимите, чтобы импортировать историю как есть — сохранится пометка из файла.</span>
+              </span>
+            </label>
             <div className="modal-actions">
               <button
                 type="button"
@@ -213,7 +237,7 @@ export default function HistoryPage({
               <button
                 type="button"
                 className="button button-outline"
-                onClick={ () => setPendingImport(null) }
+                onClick={ () => closeImport() }
               >Отмена
               </button>
             </div>
