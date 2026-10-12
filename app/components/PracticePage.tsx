@@ -196,6 +196,7 @@ export default function PracticePage({
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (initialItemId) setSelectedId(initialItemId);
   }, [initialItemId]);
 
