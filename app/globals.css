@@ -197,7 +197,7 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: var(--font-size-d
 .history-toolbar { display: flex; flex-wrap: wrap; gap: 9px; margin: 0 0 18px; }
 .modal-actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 24px; }
 .import-modal .modal-head p { margin: 8px 0 0; }
-.import-option { display: flex; align-items: flex-start; gap: 11px; margin-top: 20px; border: 1px solid #e5e4d9; border-radius: 11px; padding: 13px 15px; cursor: pointer; transition: background .18s ease, border-color .18s ease; }
+.import-option { display: flex; align-items: flex-start; gap: 14px; margin-top: 20px; border: 1px solid #e5e4d9; border-radius: 11px; padding: 13px 15px; cursor: pointer; transition: background .18s ease, border-color .18s ease; }
 .import-option:hover { background: #fafaf5; border-color: #d4d6c8; }
 .import-option input { flex-shrink: 0; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--forest); cursor: pointer; }
 .import-option input:focus-visible { outline: 3px solid #91aa57; outline-offset: 2px; }
