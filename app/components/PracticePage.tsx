@@ -72,7 +72,9 @@ function normalizeIssue(raw: Record<string, unknown>, index: number): PracticeIs
   }
   if (kind === "paste-blank") {
     const blanks = Array.isArray(raw.blanks) ? raw.blanks.map(String) : [];
-    return { kind, text: String(raw.text ?? "").trim(), blanks };
+    let translation = String(raw.translation ?? "").trim();
+    if (translation && !/^\{[\s\S]*}$/.test(translation)) translation = `{${translation}}`;
+    return { kind, text: String(raw.text ?? "").trim(), blanks, translation };
   }
   if (kind === "test") {
     const variants = Array.isArray(raw.variants) ? raw.variants.map(String).filter((variant) => variant.trim()) : [];
@@ -112,7 +114,7 @@ function buildGenerateMessages(item: HistoryItem, allowed: TaskType[]): { role: 
     .map((type) => {
       if (type === "sentence") return '- Предложение (sentence): {"kind":"sentence","prompt":"текст задания на языке темы","correct":"правильный ответ"}';
       if (type === "words") return '- Слова (words): {"kind":"words","words":["слово1","слово2"],"correct":"правильное предложение"}';
-      if (type === "paste-blank") return '- Пропуски (paste-blank): {"kind":"paste-blank","text":"предложение, где пропуски обозначены тремя подчёркиваниями ___ ","blanks":["вставить1","вставить2"]}';
+      if (type === "paste-blank") return '- Пропуски (paste-blank): {"kind":"paste-blank","text":"предложение, где пропуски обозначены тремя подчёркиваниями ___ ","blanks":["вставить1","вставить2"],"translation":"перевод предложения на русский, заключённый в фигурные скобки {…}"}';
       return '- Тест (test): {"kind":"test","question":"вопрос","variants":["вариант1","вариант2","вариант3"],"correctIndex":0}';
     })
     .join("\n");
@@ -127,6 +129,8 @@ ${describeTheme(item)}
 Сгенерируй 10 заданий. Разрешённые типы: ${typeList}.
 Для каждого задания используй одну из форм:
 ${forms}
+
+Для заданий типа «Пропуски» обязательно заполни поле translation — перевод предложения на русский, заключённый в фигурные скобки {…}.
 
 Сделай задания разнообразными, на одну и ту же тему, полезными для закрепления правила. Возвращай только JSON.`;
   return [
@@ -462,6 +466,9 @@ export default function PracticePage({
                           </Fragment>
                         ))}
                       </p>
+                      {issue.translation && (
+                        <p className="blank-translation">{issue.translation}</p>
+                      )}
                     </Field>
                   );
                 })()}
@@ -544,6 +551,9 @@ export default function PracticePage({
                     <span className={correct ? "correct-mark" : "wrong-mark"} aria-hidden="true">{correct ? "✓" : "!"}</span>
                   </div>
                   <p className="issue-prompt">{issue.kind === "test" ? issue.question : issue.kind === "words" ? issue.words.join(" + ") : issue.kind === "paste-blank" ? issue.text : issue.prompt}</p>
+                  {issue.kind === "paste-blank" && issue.translation && (
+                    <p className="blank-translation">{issue.translation}</p>
+                  )}
                   <div className="answer-feedback">
                     <div><span>ВАШ ОТВЕТ</span><p>{learnerAnswerText(issue, answers[index] ?? [])}</p></div>
                     {!correct && <div><span>ПРАВИЛЬНО</span><p>{issue.kind === "test" ? issue.variants[issue.correctIndex] : issue.kind === "paste-blank" ? issue.blanks.join(", ") : issue.correct}</p></div>}

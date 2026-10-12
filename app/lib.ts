@@ -63,7 +63,7 @@ export type PracticeMode = "same" | "any";
 export type PracticeIssue =
   | { kind: "sentence"; prompt: string; correct: string }
   | { kind: "words"; words: string[]; correct: string }
-  | { kind: "paste-blank"; text: string; blanks: string[] }
+  | { kind: "paste-blank"; text: string; blanks: string[]; translation: string }
   | { kind: "test"; question: string; variants: string[]; correctIndex: number };
 
 // Task types allowed when the learner picks "any available" practice mode.
