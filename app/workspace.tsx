@@ -91,7 +91,7 @@ export default function Workspace() {
           const parsed = savedPrompts;
           setPrompts([...BUILTIN_PROMPTS.map((builtin) => ({ ...builtin, ...(parsed.find((item) => item.id === builtin.id) ?? {}) })), ...parsed.filter((item) => !item.builtin)]);
         }
-        if (savedHistory) setHistory(savedHistory);
+        if (savedHistory) setHistory(savedHistory.map((item) => ({ ...item, isPracticed: item.isPracticed ?? false })));
         if (savedDraft) setDraft({ ...blankDraft(), ...savedDraft });
         setApiKey(savedKey);
         setKeyDraft(savedKey);
@@ -360,7 +360,8 @@ export default function Workspace() {
         correctAnswer: draft.correctAnswer.trim(),
         response: data.response,
         model: settings.model,
-        language: settings.language
+        language: settings.language,
+        isPracticed: false
       };
       setHistory((current) => [item, ...current]);
       setExplanation(item);

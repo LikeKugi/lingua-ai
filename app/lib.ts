@@ -35,6 +35,7 @@ export type HistoryItem = {
   response: string;
   model: string;
   language: string;
+  isPracticed: boolean;
 };
 
 export function taskToText(task: HistoryItem["task"]): string {

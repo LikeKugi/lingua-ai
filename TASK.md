@@ -196,6 +196,7 @@ type HistoryItem = {
   response: string;
   model: string;
   language: string;
+  isPracticed: boolean;
 };
 
 type PromptTemplate = {

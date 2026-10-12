@@ -81,7 +81,7 @@ export default function HistoryPage({
           showToast("Файл не содержит разборов.", "info");
           return;
         }
-        setPendingImport(items as HistoryItem[]);
+        setPendingImport(items.map((item) => ({ ...item, isPracticed: item.isPracticed ?? false })));
       } catch {
         showToast("Не удалось прочитать файл. Проверьте, что это корректный экспорт истории.", "error");
       }
