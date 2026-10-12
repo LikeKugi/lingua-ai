@@ -213,6 +213,9 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: var(--font-size-d
 .prompt-card { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: 11px; padding: 17px 19px; transition: background .18s ease, opacity .18s ease; }
 .prompt-card.disabled-prompt { background: #f9f8f3; }
 .prompt-number { align-self: start; padding-top: 2px; color: #a0a294; font-family: var(--serif); font-size: var(--font-size-13); }
+.edit-prompt-icon { align-self: start; margin-top: 2px; display: grid; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: var(--forest-soft); color: var(--forest); font-size: var(--font-size-15); }
+.edit-prompt-form { grid-column: 2 / -1; display: grid; gap: 14px; }
+.edit-prompt-form .field { margin-bottom: 0; }
 .prompt-copy { min-width: 0; }
 .prompt-title-line { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
 .prompt-title-line h3 { margin: 0; font-family: var(--serif); font-size: var(--font-size-17); font-weight: 400; }

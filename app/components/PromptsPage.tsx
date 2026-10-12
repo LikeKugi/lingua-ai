@@ -48,8 +48,11 @@ export default function PromptsPage({
           key={ prompt.id }
         >
           { editingPrompt === prompt.id ? (
-            <form
-              onSubmit={ (event) => {
+            <>
+              <span className="edit-prompt-icon" aria-hidden="true">✎</span>
+              <form
+                className="edit-prompt-form"
+                onSubmit={ (event) => {
                 event.preventDefault();
                 if (!editingValue.title.trim() || !editingValue.body.trim()) {
                   showToast("Заполните название и текст правила.", "error");
@@ -91,7 +94,8 @@ export default function PromptsPage({
                 >Отмена
                 </button>
               </div>
-            </form>
+              </form>
+            </>
           ) : (
             <>
               <div className="prompt-number">{ String(prompts.indexOf(prompt) + 1).padStart(2, "0") }</div>
