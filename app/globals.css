@@ -122,7 +122,7 @@ h1 { margin-bottom: 5px; font-family: var(--serif); font-size: var(--font-size-d
 .correct-area { border-color: #cfdacd; }
 .missing-note { display: flex; align-items: flex-start; gap: 9px; margin: 9px 0 17px; color: #70776d; font-size: var(--font-size-12); line-height: 1.6; }
 .missing-note a, .privacy-note a { color: var(--forest); font-weight: 650; text-decoration-thickness: 1px; text-underline-offset: 2px; }
-.missing-mark { display: grid; width: 17px; height: 17px; flex: none; place-items: center; margin-top: 1px; border: 1px solid #b6baaa; border-radius: 50%; color: #69766a; font-family: var(--serif); font-size: var(--font-size-11); }
+.missing-mark { display: grid; width: 17px; height: 17px; flex: none; place-items: center; margin-top: 1px; border: 1px solid #b6baaa; border-radius: 50%; color: #69766a; font-family: var(--serif); font-size: var(--font-size-11); line-height: 0; }
 .submit-row { display: flex; align-items: center; gap: 16px; margin-top: 20px; }
 .button { display: inline-flex; min-height: 45px; align-items: center; justify-content: center; gap: 17px; border: 1px solid transparent; border-radius: 9px; padding: 0 18px; cursor: pointer; font-size: var(--font-size-13); font-weight: 650; text-decoration: none; transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease; }
 .button:hover:not(:disabled) { transform: translateY(-1px); }
