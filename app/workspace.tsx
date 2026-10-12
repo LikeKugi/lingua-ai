@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   FormEvent,
   MouseEvent as ReactMouseEvent,
@@ -27,6 +27,7 @@ import HistoryPage from './components/HistoryPage';
 import PromptsPage from './components/PromptsPage';
 import InstructionPage from './components/InstructionPage';
 import SettingsPage from './components/SettingsPage';
+import PracticePage from './components/PracticePage';
 
 const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], sentence: '', blankTask: [], testText: '', testVariants: [], userAnswer: '', correctAnswer: '' });
 const PAGES = [
@@ -39,7 +40,8 @@ const PAGES = [
 
 export default function Workspace() {
   const pathname = usePathname();
-  const page = PAGES.find((entry) => entry.href === pathname)?.key ?? 'explain';
+  const router = useRouter();
+  const page = pathname === '/practice' ? 'practice' : PAGES.find((entry) => entry.href === pathname)?.key ?? 'explain';
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [prompts, setPrompts] = useState<PromptTemplate[]>(BUILTIN_PROMPTS);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -57,6 +59,7 @@ export default function Workspace() {
   const [explanation, setExplanation] = useState<HistoryItem | null>(null);
   const [selectedHistory, setSelectedHistory] = useState<HistoryItem | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [practiceItemId, setPracticeItemId] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
   const [installInstructions, setInstallInstructions] = useState('В меню браузера выберите «Добавить на главный экран». Для установки требуется HTTPS; на localhost установка доступна во время разработки.');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
@@ -246,6 +249,10 @@ export default function Workspace() {
       event.preventDefault();
       window.location.assign(href);
     }
+  };
+  const startPractice = (id: string) => {
+    setPracticeItemId(id);
+    router.push('/practice');
   };
 
   const providerError = (status: number, code?: string) => {
@@ -464,6 +471,7 @@ export default function Workspace() {
     prompts: ['Промпты', 'Настройте правила, по которым модель разбирает ваши ошибки.'],
     instruction: ['Инструкция', 'Основное сообщение преподавателю отправляется вместе с каждым запросом.'],
     settings: ['Настройки', 'Подключите свой сервис и выберите язык объяснений.'],
+    practice: ['Практика', 'Потренируйтесь на разобранной ошибке, чтобы закрепить правило.'],
   };
 
   return <div className="app-frame">
@@ -527,6 +535,7 @@ export default function Workspace() {
           history={ history }
           setHistory={ setHistory }
           setSelectedHistory={ setSelectedHistory }
+          onPracticeItem={ startPractice }
           showToast={ showToast }
         /> }
 
@@ -566,6 +575,15 @@ export default function Workspace() {
           setKeyVisible={ setKeyVisible }
           setInstallPrompt={ setInstallPrompt }
           requestModels={ requestModels }
+        /> }
+        { page === 'practice' && <PracticePage
+          initialItemId={ practiceItemId }
+          history={ history }
+          setHistory={ setHistory }
+          settings={ settings }
+          apiKey={ apiKey }
+          online={ online }
+          showToast={ showToast }
         /> }
       </main>
     </div>

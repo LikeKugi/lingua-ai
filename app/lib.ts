@@ -53,6 +53,36 @@ export function taskToText(task: HistoryItem["task"]): string {
     .trim();
 }
 
+// Practice feature: a learner chooses a history item (a past mistake) and the
+// app asks the model to generate training issues on that theme, then checks the
+// learner's answers. These shapes describe the issues the model returns and the
+// learner's answers.
+
+export type PracticeMode = "same" | "any";
+
+export type PracticeIssue =
+  | { kind: "sentence"; prompt: string; correct: string }
+  | { kind: "words"; words: string[]; correct: string }
+  | { kind: "paste-blank"; text: string; blanks: string[] }
+  | { kind: "test"; question: string; variants: string[]; correctIndex: number };
+
+// Task types allowed when the learner picks "any available" practice mode.
+export const ANY_PRACTICE_TYPES: TaskType[] = ["sentence", "paste-blank", "test"];
+
+export function taskTypeLabel(taskType: TaskType): string {
+  return isWordsTask(taskType) ? "Слова" : isSentenceTask(taskType) ? "Предложение" : isPasteBlankTask(taskType) ? "Пропуски" : "Тест";
+}
+
+export function describeTheme(item: HistoryItem): string {
+  return [
+    `Тип задания: ${taskTypeLabel(item.taskType)}.`,
+    `Задание: ${taskToText(item.task)}`,
+    `Ответ учащегося: ${item.userAnswer}`,
+    `Правильный ответ: ${item.correctAnswer}`,
+    `Разбор ошибки:\n${item.response}`,
+  ].join("\n");
+}
+
 export type PromptTemplate = {
   id: string;
   title: string;

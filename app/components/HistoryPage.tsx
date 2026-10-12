@@ -9,6 +9,7 @@ interface HistoryPageProps {
   history: HistoryItem[];
   setHistory: Dispatch<SetStateAction<HistoryItem[]>>;
   setSelectedHistory: Dispatch<SetStateAction<HistoryItem | null>>;
+  onPracticeItem: (id: string) => void;
   showToast: (text: string, kind?: Toast["kind"]) => void;
 }
 
@@ -35,6 +36,7 @@ export default function HistoryPage({
   history,
   setHistory,
   setSelectedHistory,
+  onPracticeItem,
   showToast,
 }: HistoryPageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,6 +168,7 @@ export default function HistoryPage({
             >
               <div className="history-card-top">
                 <span className="type-badge">{ isWordsTask(item.taskType) ? "СЛОВА" : isPasteBlankTask(item.taskType) ? "ПРОПУСКИ" : isTestTask(item.taskType) ? "ТЕСТ" : "ПРЕДЛОЖЕНИЕ" }</span>
+                { item.isPracticed && <span className="practiced-badge">отработано</span> }
                 <time>{ dateLabel(item.createdAt) }</time>
               </div>
               <h2>{ taskToText(item.task) }</h2>
@@ -173,11 +176,14 @@ export default function HistoryPage({
               <p className="history-preview">
                 { item.response.replace(/[#*_`]/g, "").slice(0, 190) }{ item.response.length > 190 ? "…" : "" }
               </p>
-              <div className="history-card-bottom">
-                <span>{ item.model } · { languageLabel(item.language) }</span>
-                <span className="open-arrow">Открыть ↗</span>
-              </div>
             </button>
+            <div className="history-card-bottom">
+              <span>{ item.model } · { languageLabel(item.language) }</span>
+              <span className="history-actions">
+                <button type="button" className="button button-outline button-small" onClick={ () => setSelectedHistory(item) }>Открыть ↗</button>
+                <button type="button" className="button button-soft button-small" onClick={ () => onPracticeItem(item.id) } aria-label="Практиковать эту тему">Практиковать</button>
+              </span>
+            </div>
             <button
               className="icon-button history-delete"
               onClick={ () => {
