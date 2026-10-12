@@ -4,6 +4,7 @@ import { isPasteBlankTask, isSentenceTask, isTestTask, isWordsTask } from "../li
 export type Draft = {
   taskType: TaskType;
   words: string[];
+  wordsDescription: string;
   sentence: string;
   blankTask: BlankSegment[];
   testText: string;

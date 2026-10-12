@@ -25,11 +25,19 @@ export type TestTask = {
   variants: string[];
 };
 
+// Words task built on the Разбор page: the words to compose a sentence from,
+// with an optional learner-provided description of what the task asks for
+// (for example, make a question or use the past tense).
+export type WordsTask = {
+  words: string[];
+  description?: string;
+};
+
 export type HistoryItem = {
   id: string;
   createdAt: number;
   taskType: TaskType;
-  task: string | string[] | BlankSegment[] | TestTask;
+  task: string | string[] | BlankSegment[] | WordsTask | TestTask;
   userAnswer: string;
   correctAnswer: string;
   response: string;
@@ -40,6 +48,10 @@ export type HistoryItem = {
 
 export function taskToText(task: HistoryItem["task"]): string {
   if (typeof task === "string") return task;
+  if (!Array.isArray(task) && typeof task === "object" && task !== null && "words" in task) {
+    const words = task.words.map((word) => word.trim()).filter(Boolean).join(" · ");
+    return [task.description?.trim(), words].filter(Boolean).join(" — ");
+  }
   if (!Array.isArray(task) && typeof task === "object" && task !== null && "text" in task) {
     return (task as TestTask).text.trim();
   }
@@ -62,7 +74,8 @@ export type PracticeMode = "same" | "any";
 
 export type PracticeIssue =
   | { kind: "sentence"; prompt: string; correct: string }
-  | { kind: "words"; words: string[]; correct: string }
+  // description — необязательное уточнение задания (например, составить вопрос, отрицание или употребить указанное время).
+  | { kind: "words"; words: string[]; description?: string; correct: string }
   | { kind: "paste-blank"; text: string; blanks: string[]; translation: string }
   | { kind: "test"; question: string; variants: string[]; correctIndex: number };
 
@@ -152,7 +165,7 @@ export function buildMessages(input: {
   settings: Settings;
   prompts: PromptTemplate[];
   taskType: TaskType;
-  task: string | string[] | BlankSegment[] | TestTask;
+  task: string | string[] | BlankSegment[] | WordsTask | TestTask;
   userAnswer: string;
   correctAnswer: string;
 }) {
@@ -166,7 +179,11 @@ export function buildMessages(input: {
   let taskLine: string;
   switch (input.taskType) {
     case "words": {
-      taskLine = `Задание: составить предложение из слов: [${(input.task as string[]).map((word) => word.trim()).filter(Boolean).join(", ")}]`;
+      const task = input.task as string[] | WordsTask;
+      const words = (Array.isArray(task) ? task : task.words).map((word) => word.trim()).filter(Boolean);
+      taskLine = `Задание: составить предложение из слов: [${words.join(", ")}]`;
+      const description = Array.isArray(task) ? "" : task.description?.trim();
+      if (description) taskLine += `\nОписание задания: ${description}`;
       break;
     }
     case "paste-blank": {

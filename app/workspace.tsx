@@ -29,7 +29,7 @@ import InstructionPage from './components/InstructionPage';
 import SettingsPage from './components/SettingsPage';
 import PracticePage from './components/PracticePage';
 
-const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], sentence: '', blankTask: [], testText: '', testVariants: [], userAnswer: '', correctAnswer: '' });
+const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], wordsDescription: '', sentence: '', blankTask: [], testText: '', testVariants: [], userAnswer: '', correctAnswer: '' });
 const PAGES = [
   { href: '/', title: 'Разбор', key: 'explain', symbol: '✳' },
   { href: '/history', title: 'История', key: 'history', symbol: '◷' },
@@ -226,6 +226,7 @@ export default function Workspace() {
   const clearDraft = () => setDraft((current) => ({
     taskType: current.taskType,
     words: isWordsTask(current.taskType) ? ['', ''] : [],
+    wordsDescription: '',
     sentence: '',
     blankTask: isPasteBlankTask(current.taskType)
       ? [{ type: 'text', text: '' }, { type: 'blank', variants: [] }]
@@ -333,8 +334,10 @@ export default function Workspace() {
     setExplanation(null);
     setExplanationError('');
     try {
+      const words = draft.words.map((word) => word.trim()).filter(Boolean);
+      const wordsDescription = draft.wordsDescription.trim();
       const task = isDraftWords(draft)
-        ? draft.words.map((word) => word.trim()).filter(Boolean)
+        ? wordsDescription ? { words, description: wordsDescription } : { words }
         : isDraftPasteBlank(draft)
           ? draft.blankTask
           : isDraftTest(draft)

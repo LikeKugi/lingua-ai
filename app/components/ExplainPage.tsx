@@ -76,6 +76,19 @@ export default function ExplainPage({
         </div>
         { isDraftWords(draft) && (
           <Field
+            label="Описание задания"
+            hint="Необязательно: уточните, что нужно сделать, — например, составить вопрос, отрицание или употребить указанное время."
+          >
+            <input
+              className="text-input"
+              value={ draft.wordsDescription }
+              onChange={ (event) => updateDraft("wordsDescription", event.target.value) }
+              placeholder="например, составьте вопрос к предложению"
+            />
+          </Field>
+        ) }
+        { isDraftWords(draft) && (
+          <Field
             label="Слова для задания"
             hint="Введите слова или фразы, из которых нужно составить предложение."
           >

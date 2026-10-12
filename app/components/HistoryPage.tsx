@@ -23,7 +23,7 @@ const isHistoryItem = (value: unknown): value is HistoryItem => {
     typeof record.id === "string" &&
     typeof record.createdAt === "number" &&
     (isWordsTask(record.taskType as TaskType) || isSentenceTask(record.taskType as TaskType) || isPasteBlankTask(record.taskType as TaskType) || isTestTask(record.taskType as TaskType)) &&
-    (typeof record.task === "string" || Array.isArray(record.task) || (typeof record.task === "object" && record.task !== null && "text" in record.task && Array.isArray((record.task as Record<string, unknown>).variants))) &&
+    (typeof record.task === "string" || Array.isArray(record.task) || (typeof record.task === "object" && record.task !== null && (("words" in record.task && Array.isArray((record.task as Record<string, unknown>).words)) || ("text" in record.task && Array.isArray((record.task as Record<string, unknown>).variants))))) &&
     typeof record.userAnswer === "string" &&
     typeof record.correctAnswer === "string" &&
     typeof record.response === "string" &&

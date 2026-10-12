@@ -68,7 +68,8 @@ function normalizeIssue(raw: Record<string, unknown>, index: number): PracticeIs
   }
   if (kind === "words") {
     const words = Array.isArray(raw.words) ? raw.words.map(String).filter(Boolean) : [];
-    return { kind, words, correct: String(raw.correct ?? "").trim() };
+    const description = String(raw.description ?? "").trim();
+    return { kind, words, ...(description ? { description } : {}), correct: String(raw.correct ?? "").trim() };
   }
   if (kind === "paste-blank") {
     const blanks = Array.isArray(raw.blanks) ? raw.blanks.map(String) : [];
@@ -113,7 +114,7 @@ function buildGenerateMessages(item: HistoryItem, allowed: TaskType[]): { role: 
   const forms = allowed
     .map((type) => {
       if (type === "sentence") return '- Предложение (sentence): {"kind":"sentence","prompt":"текст задания на языке темы","correct":"правильный ответ"}';
-      if (type === "words") return '- Слова (words): {"kind":"words","words":["слово1","слово2"],"correct":"правильное предложение"}';
+      if (type === "words") return '- Слова (words): {"kind":"words","words":["слово1","слово2"],"description":"необязательное уточнение задания, если оно отличается от составления предложения","correct":"правильное предложение"}';
       if (type === "paste-blank") return '- Пропуски (paste-blank): {"kind":"paste-blank","text":"предложение, где пропуски обозначены тремя подчёркиваниями ___ ","blanks":["вставить1","вставить2"],"translation":"перевод предложения на русский, заключённый в фигурные скобки {…}"}';
       return '- Тест (test): {"kind":"test","question":"вопрос","variants":["вариант1","вариант2","вариант3"],"correctIndex":0}';
     })
@@ -131,6 +132,7 @@ ${describeTheme(item)}
 ${forms}
 
 Для заданий типа «Пропуски» обязательно заполни поле translation — перевод предложения на русский, заключённый в фигурные скобки {…}.
+Поле description у заданий типа «Слова» необязательно: укажи его, только если задание отличается от простого составления предложения — например, составить вопрос, отрицание или употребить указанное время; иначе опусти это поле.
 
 Сделай задания разнообразными, на одну и ту же тему, полезными для закрепления правила. Возвращай только JSON.`;
   return [
@@ -145,7 +147,7 @@ function issueCheckText(issue: PracticeIssue, index: number, answer: string[]): 
     case "sentence":
       return `${header}\nЗадание: ${issue.prompt}\nПравильный ответ: ${issue.correct}\nОтвет учащегося: ${answer[0] ?? ""}`;
     case "words":
-      return `${header}\nСлова: ${issue.words.join(", ")}\nПравильный ответ: ${issue.correct}\nОтвет учащегося: ${answer[0] ?? ""}`;
+      return `${header}\n${issue.description ? `Задание: ${issue.description}\n` : ""}Слова: ${issue.words.join(", ")}\nПравильный ответ: ${issue.correct}\nОтвет учащегося: ${answer[0] ?? ""}`;
     case "paste-blank":
       return `${header}\nТекст: ${issue.text}\nПравильные вставки (по порядку): ${issue.blanks.join(", ")}\nОтветы учащегося (по порядку): ${answer.join(" | ")}`;
     case "test":
@@ -431,7 +433,7 @@ export default function PracticePage({
                   </Field>
                 )}
                 {issue.kind === "words" && (
-                  <Field label="Составьте предложение из слов">
+                  <Field label={issue.description ?? "Составьте предложение из слов"}>
                     <div className="word-chips">
                       {issue.words.map((word, wordIndex) => (
                         <span className="chip" key={wordIndex}>{word}</span>
@@ -551,6 +553,9 @@ export default function PracticePage({
                     <span className={correct ? "correct-mark" : "wrong-mark"} aria-hidden="true">{correct ? "✓" : "!"}</span>
                   </div>
                   <p className="issue-prompt">{issue.kind === "test" ? issue.question : issue.kind === "words" ? issue.words.join(" + ") : issue.kind === "paste-blank" ? issue.text : issue.prompt}</p>
+                  {issue.kind === "words" && issue.description && (
+                    <p className="blank-translation">{issue.description}</p>
+                  )}
                   {issue.kind === "paste-blank" && issue.translation && (
                     <p className="blank-translation">{issue.translation}</p>
                   )}

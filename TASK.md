@@ -57,10 +57,11 @@ keyboard, and touch.
 - Offer three task types: **Слова** (make a sentence from a set of words), **Предложение** (translate or transform a
   source sentence), and **Пропуски** (paste a sentence with blanks). Start in word mode with two empty word inputs.
 - In word mode, allow users to add inputs and remove any input while always keeping at least one. Ignore blank word
-  inputs when building the request. In sentence mode, use one multiline source-sentence input. In **Пропуски** mode,
-  let users build the sentence from alternating text and blank segments; each blank may carry optional variant words for
-  insertion. A blank task is valid only when it has at least one blank and some text or at least one variant. Switching
-  task type clears the task and both answer fields.
+  inputs when building the request. Word mode also has an optional task-description input («Описание задания»); when
+  filled, it is saved with the task and sent with the request. In sentence mode, use one multiline source-sentence
+  input. In **Пропуски** mode, let users build the sentence from alternating text and blank segments; each blank may
+  carry optional variant words for insertion. A blank task is valid only when it has at least one blank and some text
+  or at least one variant. Switching task type clears the task and both answer fields.
 - Include multiline fields for **Ваш вариант** and **Правильный вариант**. Switching task type clears the task and both
   answer fields.
 - Disable **Разобрать ошибку** until the task, learner answer, correct answer, API key, base URL, and model are present.
@@ -146,7 +147,8 @@ Build two chat messages for each explanation:
 1. **System message:** the trimmed base system prompt, followed by each enabled prompt as `title: body`, the trimmed
    optional suffix, and `Ответ дай структурировано и на языке: {response language label}.` Separate non-empty sections
    with blank lines.
-2. **User message:** for word tasks use `Задание: составить предложение из слов: [word1, word2, ...]`; for sentence
+2. **User message:** for word tasks use `Задание: составить предложение из слов: [word1, word2, ...]`, followed by
+   `Описание задания: {task description}` when the optional word-task description is filled; for sentence
    tasks use `Задание: исходное предложение — «{sentence}»`. Then include `Мой вариант: «{learner answer}»`,
    `Правильный вариант: «{correct answer}»`, a blank line, and
    `Объясни, в чём именно я ошибся: разбери грамматику, синтаксис и лексику.` Finish with
@@ -186,11 +188,16 @@ type TestTask = {
   variants: string[];
 };
 
+type WordsTask = {
+  words: string[];
+  description?: string;
+};
+
 type HistoryItem = {
   id: string;
   createdAt: number;
   taskType: TaskType;
-  task: string | string[] | BlankSegment[] | TestTask;
+  task: string | string[] | BlankSegment[] | WordsTask | TestTask;
   userAnswer: string;
   correctAnswer: string;
   response: string;
