@@ -28,15 +28,18 @@ import PromptsPage from './components/PromptsPage';
 import InstructionPage from './components/InstructionPage';
 import SettingsPage from './components/SettingsPage';
 import PracticePage from './components/PracticePage';
+import { createI18n, I18nProvider, isInterfaceLanguage, taskTypeName } from './i18n';
 
 const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], wordsDescription: '', sentence: '', blankTask: [], testText: '', testVariants: [], userAnswer: '', correctAnswer: '' });
 const PAGES = [
-  { href: '/', title: 'Разбор', key: 'explain', symbol: '✳' },
-  { href: '/history', title: 'История', key: 'history', symbol: '◷' },
-  { href: '/prompts', title: 'Промпты', key: 'prompts', symbol: '☷' },
-  { href: '/instruction', title: 'Инструкция', key: 'instruction', symbol: '≡' },
-  { href: '/settings', title: 'Настройки', key: 'settings', symbol: '⚙' },
-];
+  { href: '/', key: 'explain', symbol: '✳' },
+  { href: '/history', key: 'history', symbol: '◷' },
+  { href: '/prompts', key: 'prompts', symbol: '☷' },
+  { href: '/instruction', key: 'instruction', symbol: '≡' },
+  { href: '/settings', key: 'settings', symbol: '⚙' },
+] as const;
+
+type InstallKind = 'generic' | 'ios' | 'android';
 
 export default function Workspace() {
   const pathname = usePathname();
@@ -61,7 +64,7 @@ export default function Workspace() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [practiceItemId, setPracticeItemId] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
-  const [installInstructions, setInstallInstructions] = useState('В меню браузера выберите «Добавить на главный экран». Для установки требуется HTTPS; на localhost установка доступна во время разработки.');
+  const [installKind, setInstallKind] = useState<InstallKind>('generic');
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [promptForm, setPromptForm] = useState({ title: '', body: '' });
   const [editingPrompt, setEditingPrompt] = useState<string | null>(null);
@@ -69,11 +72,23 @@ export default function Workspace() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const historyModalRef = useRef<HTMLElement | null>(null);
 
+  const i18n = useMemo(() => createI18n(settings.uiLanguage), [settings.uiLanguage]);
+  const { t, locale } = i18n;
+  // Effects that run once or do not list the dictionary as a dependency read the latest one through this ref.
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
   const showToast = (text: string, kind: Toast['kind'] = 'info') => {
     setToast({ text, kind });
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), 4200);
   };
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
 
   useEffect(() => {
     const hydrate = async () => {
@@ -85,10 +100,16 @@ export default function Workspace() {
         const savedKey = await unmaskSecret(readRaw(STORAGE_KEYS.apiKey) ?? '');
         const parsedSettings = savedSettings ?? {};
         const restoredBaseUrl = await unmaskSecret(parsedSettings.baseUrl ?? '');
+        // Users who saved settings before the interface picker existed keep the Russian UI;
+        // first-time visitors get the device language when it is supported.
+        const uiLanguage = isInterfaceLanguage(parsedSettings.uiLanguage)
+          ? parsedSettings.uiLanguage
+          : savedSettings ? 'ru' : defaultLanguage();
         setSettings({
           ...defaultSettings(), ...parsedSettings,
           baseUrl: restoredBaseUrl,
-          language: parsedSettings.language ?? defaultLanguage()
+          language: parsedSettings.language ?? defaultLanguage(),
+          uiLanguage,
         });
         if (savedPrompts) {
           const parsed = savedPrompts;
@@ -99,13 +120,13 @@ export default function Workspace() {
         setApiKey(savedKey);
         setKeyDraft(savedKey);
       } catch {
-        window.setTimeout(() => showToast('Не удалось прочитать часть данных браузера. Проверьте доступное место для хранения.', 'error'), 0);
+        window.setTimeout(() => showToast(tRef.current.app.hydrateError, 'error'), 0);
       }
       setHydrated(true);
       setOnline(navigator.onLine);
-      if (/iphone|ipad|ipod/i.test(navigator.userAgent)) setInstallInstructions('В Safari нажмите «Поделиться», затем выберите «На экран Домой». Для опубликованного сайта нужен HTTPS; localhost подходит для разработки.');
-      else if (/android/i.test(navigator.userAgent)) setInstallInstructions('В меню Chrome выберите «Установить приложение» или «Добавить на главный экран». Для опубликованного сайта нужен HTTPS; localhost подходит для разработки.');
-      else setInstallInstructions('В меню браузера выберите «Установить приложение» или «Добавить на главный экран». Для опубликованного сайта нужен HTTPS; localhost подходит для разработки.');
+      if (/iphone|ipad|ipod/i.test(navigator.userAgent)) setInstallKind('ios');
+      else if (/android/i.test(navigator.userAgent)) setInstallKind('android');
+      else setInstallKind('generic');
     };
     const hydrationTimer = window.setTimeout(() => { void hydrate(); }, 0);
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => undefined);
@@ -139,7 +160,7 @@ export default function Workspace() {
         writeJson(STORAGE_KEYS.history, history);
         writeJson(STORAGE_KEYS.draft, draft);
       } catch {
-        window.setTimeout(() => showToast('Браузер не смог сохранить изменения. Освободите место в хранилище.', 'error'), 0);
+        window.setTimeout(() => showToast(tRef.current.app.storageError, 'error'), 0);
       }
     };
     void persist();
@@ -184,27 +205,28 @@ export default function Workspace() {
   }, [selectedHistory]);
 
   const missing = useMemo(() => {
-    const needs = [];
+    const needs: string[] = [];
+    const items = t.explain.missingItems;
     if (isDraftWords(draft)) {
-      if (!draft.words.some((word) => word.trim())) needs.push('задание');
+      if (!draft.words.some((word) => word.trim())) needs.push(items.task);
     } else if (isDraftPasteBlank(draft)) {
       const hasBlank = draft.blankTask.some((segment) => segment.type === 'blank');
       const hasText = draft.blankTask.some((segment) => segment.type === 'text' && segment.text.trim());
       const hasVariant = draft.blankTask.some((segment) => segment.type === 'blank' && segment.variants.some((variant) => variant.trim()));
-      if (!hasBlank || (!hasText && !hasVariant)) needs.push('задание');
+      if (!hasBlank || (!hasText && !hasVariant)) needs.push(items.task);
     } else if (isDraftTest(draft)) {
-      if (!draft.testText.trim()) needs.push('вопрос теста');
-      if (!draft.testVariants.some((variant) => variant.trim())) needs.push('вариант ответа');
+      if (!draft.testText.trim()) needs.push(items.testQuestion);
+      if (!draft.testVariants.some((variant) => variant.trim())) needs.push(items.testVariant);
     } else if (!draft.sentence.trim()) {
-      needs.push('задание');
+      needs.push(items.task);
     }
-    if (!draft.userAnswer.trim()) needs.push('ваш вариант');
-    if (!draft.correctAnswer.trim()) needs.push('правильный вариант');
-    if (!apiKey.trim()) needs.push('ключ API');
-    if (!settings.baseUrl.trim()) needs.push('адрес сервиса');
-    if (!settings.model.trim()) needs.push('модель');
+    if (!draft.userAnswer.trim()) needs.push(items.yourAnswer);
+    if (!draft.correctAnswer.trim()) needs.push(items.correctAnswer);
+    if (!apiKey.trim()) needs.push(items.apiKey);
+    if (!settings.baseUrl.trim()) needs.push(items.baseUrl);
+    if (!settings.model.trim()) needs.push(items.model);
     return needs;
-  }, [draft, apiKey, settings.baseUrl, settings.model]);
+  }, [draft, apiKey, settings.baseUrl, settings.model, t]);
 
   const changeTaskType = (taskType: TaskType) => {
     if (draft.taskType !== taskType) {
@@ -257,23 +279,23 @@ export default function Workspace() {
   };
 
   const providerError = (status: number, code?: string) => {
-    if (code === 'invalid_url') return 'Укажите корректный адрес сервиса, начинающийся с http:// или https://.';
-    if (code === 'missing_key') return 'Введите ключ API перед проверкой подключения.';
-    if (code === 'missing_model') return 'Выберите модель в настройках.';
-    if (status === 401) return 'Сервис отклонил ключ. Проверьте его и попробуйте снова.';
-    if (status === 404) return 'Сервис не нашёл адрес моделей или выбранную модель.';
-    if (code === 'timeout') return 'Сервис не ответил вовремя. Проверьте соединение и повторите попытку.';
-    if (code === 'network') return 'Не удалось связаться с сервисом. Проверьте интернет и адрес.';
-    if (code === 'empty_response') return 'Модель вернула пустой ответ. Попробуйте другую модель.';
-    return 'Запрос не выполнен. Проверьте адрес, ключ и настройки модели.';
+    if (code === 'invalid_url') return t.errors.invalidUrl;
+    if (code === 'missing_key') return t.errors.missingKeyCheck;
+    if (code === 'missing_model') return t.errors.missingModel;
+    if (status === 401) return t.errors.unauthorized;
+    if (status === 404) return t.errors.notFound;
+    if (code === 'timeout') return t.errors.timeout;
+    if (code === 'network') return t.errors.network;
+    if (code === 'empty_response') return t.errors.emptyResponse;
+    return t.errors.generic;
   };
 
   const requestModels = async (mode: 'models' | 'check') => {
     const key = keyDraft.trim();
     if (!key) {
-      setProviderStatus('Введите ключ API для продолжения.');
+      setProviderStatus(t.settings.enterKeyForModels);
       setProviderStatusTone('error');
-      showToast('Сначала введите ключ API.', 'error');
+      showToast(t.settings.enterKeyFirst, 'error');
       return;
     }
     if (!validBaseUrl(settings.baseUrl)) {
@@ -282,7 +304,7 @@ export default function Workspace() {
       return;
     }
     setSettingsBusy(mode);
-    setProviderStatus(mode === 'models' ? 'Загружаем список моделей…' : 'Проверяем соединение…');
+    setProviderStatus(mode === 'models' ? t.settings.loadingModelsStatus : t.settings.checkingConnectionStatus);
     setProviderStatusTone('info');
     try {
       const response = await fetch('/api/models', {
@@ -302,16 +324,16 @@ export default function Workspace() {
           setApiKey(key);
           setKeyDraft(key);
         } catch {
-          setProviderStatus('Проверка пройдена, но ключ не удалось сохранить в браузере.');
+          setProviderStatus(t.settings.keyPassedSaveFailed);
           setProviderStatusTone('error');
-          showToast('Ключ прошёл проверку, но сохранить его не удалось.', 'error');
+          showToast(t.settings.keyPassedSaveFailedToast, 'error');
           return;
         }
       }
-      const checkedAt = new Intl.DateTimeFormat('ru-RU', { timeStyle: 'short' }).format(new Date());
-      setProviderStatus(mode === 'models' ? `Найдено моделей: ${ found.length }. Проверено в ${ checkedAt }.` : `Соединение работает. Найдено моделей: ${ found.length }. Проверено в ${ checkedAt }.`);
+      const checkedAt = new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(new Date());
+      setProviderStatus(mode === 'models' ? t.settings.modelsFound(found.length, checkedAt) : t.settings.connectionOk(found.length, checkedAt));
       setProviderStatusTone('success');
-      showToast(mode === 'models' ? `Список загружен: ${ found.length } моделей.` : 'Соединение с сервисом работает.', 'success');
+      showToast(mode === 'models' ? t.settings.modelsLoadedToast(found.length) : t.settings.connectionWorksToast, 'success');
     } catch (error) {
       const message = error instanceof Error && 'safeMessage' in error ? String(error.safeMessage) : error instanceof DOMException && error.name === 'TimeoutError' ? providerError(0, 'timeout') : providerError(0, 'network');
       setProviderStatus(message);
@@ -375,7 +397,7 @@ export default function Workspace() {
       };
       setHistory((current) => [item, ...current]);
       setExplanation(item);
-      showToast('Разбор готов и сохранён в истории.', 'success');
+      showToast(t.explain.explainedToast, 'success');
     } catch (error) {
       const message = error instanceof Error && 'safeMessage' in error ? String(error.safeMessage) : error instanceof DOMException && error.name === 'TimeoutError' ? providerError(0, 'timeout') : providerError(0, 'network');
       setExplanationError(message);
@@ -390,21 +412,21 @@ export default function Workspace() {
       if (keyDraft.trim()) {
         writeRaw(STORAGE_KEYS.apiKey, await maskSecret(keyDraft.trim()));
         setApiKey(keyDraft.trim());
-        showToast('Ключ сохранён в этом браузере.', 'success');
-      } else showToast('Введите ключ API перед сохранением.', 'error');
+        showToast(t.settings.keySaved, 'success');
+      } else showToast(t.settings.keyEnterFirst, 'error');
     } catch {
-      showToast('Не удалось сохранить ключ в браузере.', 'error');
+      showToast(t.settings.keySaveFailed, 'error');
     }
   };
   const clearKey = () => {
-    if (!window.confirm('Удалить сохранённый ключ API из этого браузера?')) return;
+    if (!window.confirm(t.settings.keyConfirmDelete)) return;
     try {
       removeKey(STORAGE_KEYS.apiKey);
       setApiKey('');
       setKeyDraft('');
-      showToast('Ключ удалён.', 'success');
+      showToast(t.settings.keyDeleted, 'success');
     } catch {
-      showToast('Не удалось удалить ключ.', 'error');
+      showToast(t.settings.keyDeleteFailed, 'error');
     }
   };
 
@@ -429,9 +451,9 @@ export default function Workspace() {
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
-      showToast('Настройки выгружены в файл. Секреты сохранены в замаскированном виде.', 'success');
+      showToast(t.settings.exportDone, 'success');
     } catch {
-      showToast('Не удалось выгрузить настройки.', 'error');
+      showToast(t.settings.exportFailed, 'error');
     }
   };
 
@@ -451,6 +473,7 @@ export default function Workspace() {
         if ('baseUrl' in incoming) next.baseUrl = plainBaseUrl;
         if (typeof incoming.model === 'string') next.model = incoming.model;
         if (typeof incoming.language === 'string') next.language = incoming.language;
+        if (isInterfaceLanguage(incoming.uiLanguage)) next.uiLanguage = incoming.uiLanguage;
         if (typeof incoming.suffix === 'string') next.suffix = incoming.suffix;
         if (typeof incoming.systemPrompt === 'string') next.systemPrompt = incoming.systemPrompt;
         return next;
@@ -462,59 +485,51 @@ export default function Workspace() {
         setApiKey(plainApiKey);
         setKeyDraft(plainApiKey);
       }
-      showToast('Настройки импортированы. Секреты восстановлены в замаскированном виде.', 'success');
+      showToast(t.settings.importDone, 'success');
     } catch {
-      showToast('Файл настроек повреждён или имеет неверный формат.', 'error');
+      showToast(t.settings.importFailed, 'error');
     }
   };
 
-  const titleByPage: Record<string, [string, string]> = {
-    explain: ['Разбор', 'Задание, ваш ответ и правильный вариант — объяснение появится ниже.'],
-    history: ['История', 'Сохранённые разборы остаются только в этом браузере.'],
-    prompts: ['Промпты', 'Настройте правила, по которым модель разбирает ваши ошибки.'],
-    instruction: ['Инструкция', 'Основное сообщение преподавателю отправляется вместе с каждым запросом.'],
-    settings: ['Настройки', 'Подключите свой сервис и выберите язык объяснений.'],
-    practice: ['Практика', 'Потренируйтесь на разобранной ошибке, чтобы закрепить правило.'],
-  };
-
-  return <div className="app-frame">
+  return <I18nProvider value={ i18n }>
+  <div className="app-frame">
     <aside className="sidebar">
-      <Link className="brand" href="/" aria-label="Лингва — на страницу разбора"><span
-        className="brand-mark">л</span><span>ЛИНГВА</span></Link>
-      <p className="sidebar-caption">ПРОСТРАНСТВО ДЛЯ УЧЁБЫ</p>
-      <nav className="main-nav" aria-label="Основная навигация">
+      <Link className="brand" href="/" aria-label={ t.app.brandLinkLabel }><span
+        className="brand-mark">л</span><span>{ t.app.brand }</span></Link>
+      <p className="sidebar-caption">{ t.app.brandCaption }</p>
+      <nav className="main-nav" aria-label={ t.app.mainNav }>
         { PAGES.map((item) => <Link key={ item.key } href={ item.href }
                                     onClick={ (event) => navigateOffline(event, item.href) }
                                     className={ `nav-link ${ page === item.key ? 'active' : '' }` }
                                     aria-current={ page === item.key ? 'page' : undefined }><span className="nav-symbol"
-                                                                                                  aria-hidden="true">{ item.symbol }</span><span>{ item.title }</span>{ item.key === 'history' && history.length > 0 &&
+                                                                                                  aria-hidden="true">{ item.symbol }</span><span>{ t.nav[item.key] }</span>{ item.key === 'history' && history.length > 0 &&
             <span className="nav-count">{ history.length > 99 ? '99+' : history.length }</span> }</Link>) }
       </nav>
       <div className="sidebar-bottom">
         <div className={ `connection-pill ${ online ? '' : 'offline' }` }><span
-          className="status-dot"/>{ online ? 'Вы в сети' : 'Нет подключения' }</div>
-        <p>Ваши записи и настройки хранятся на этом устройстве.</p>
+          className="status-dot"/>{ online ? t.app.online : t.app.offline }</div>
+        <p>{ t.app.sidebarNote }</p>
       </div>
     </aside>
     <div className="app-main">
       <header className="mobile-header"><Link className="brand" href="/"><span
-        className="brand-mark">л</span><span>ЛИНГВА</span></Link><span
+        className="brand-mark">л</span><span>{ t.app.brand }</span></Link><span
         className={ `mobile-online ${ online ? '' : 'offline' }` }><span
-        className="status-dot"/>{ online ? 'В сети' : 'Офлайн' }</span></header>
+        className="status-dot"/>{ online ? t.app.mobileOnline : t.app.mobileOffline }</span></header>
       { !online &&
-          <div className="offline-banner" role="status"><span aria-hidden="true">⌁</span><span><b>Вы не в сети.</b> Интерфейс и сохранённые записи доступны; для нового разбора нужен интернет.</span>
+          <div className="offline-banner" role="status"><span aria-hidden="true">⌁</span><span><b>{ t.app.offlineTitle }</b> { t.app.offlineText }</span>
           </div> }
       <main className="main-content" id="main-content">
         <div className="page-heading">
-          <div><p className="eyebrow">ЛИНГВА <span>/</span> { titleByPage[page][0].toLocaleUpperCase('ru-RU') }</p>
-            <h1>{ titleByPage[page][0] }</h1><p className="page-lede">{ titleByPage[page][1] }</p></div>
+          <div><p className="eyebrow">{ t.app.brand } <span>/</span> { t.nav[page].toLocaleUpperCase(locale) }</p>
+            <h1>{ t.nav[page] }</h1><p className="page-lede">{ t.lede[page] }</p></div>
           { page === 'history' && history.length > 0 && <button className="button button-quiet-danger" onClick={ () => {
-            if (window.confirm('Удалить все сохранённые разборы? Это действие нельзя отменить.')) {
+            if (window.confirm(t.app.confirmClearHistory)) {
               setHistory([]);
               setSelectedHistory(null);
-              showToast('История очищена.', 'success');
+              showToast(t.app.historyCleared, 'success');
             }
-          } }>Очистить</button> }
+          } }>{ t.app.clearHistory }</button> }
         </div>
 
         { page === 'explain' && <ExplainPage
@@ -569,7 +584,7 @@ export default function Workspace() {
           providerStatus={ providerStatus }
           providerStatusTone={ providerStatusTone }
           installPrompt={ installPrompt }
-          installInstructions={ installInstructions }
+          installInstructions={ t.install[installKind] }
           saveKey={ saveKey }
           clearKey={ clearKey }
           exportSettings={ exportSettings }
@@ -590,14 +605,14 @@ export default function Workspace() {
         /> }
       </main>
     </div>
-    <nav className="bottom-nav" aria-label="Основная навигация для телефона">{ PAGES.map((item) => <Link
+    <nav className="bottom-nav" aria-label={ t.app.bottomNav }>{ PAGES.map((item) => <Link
       href={ item.href } onClick={ (event) => navigateOffline(event, item.href) } key={ item.key }
       className={ page === item.key ? 'active' : '' } aria-current={ page === item.key ? 'page' : undefined }><span
-      aria-hidden="true">{ item.symbol }</span><small>{ item.title }</small></Link>) }</nav>
+      aria-hidden="true">{ item.symbol }</span><small>{ t.nav[item.key] }</small></Link>) }</nav>
     { toast &&
         <div className={ `toast toast-${ toast.kind }` } role={ toast.kind === 'error' ? 'alert' : 'status' }><span
             className="toast-mark">{ toast.kind === 'success' ? '✓' : toast.kind === 'error' ? '!' : 'i' }</span>{ toast.text }
-            <button onClick={ () => setToast(null) } aria-label="Закрыть уведомление">×</button>
+            <button onClick={ () => setToast(null) } aria-label={ t.app.closeToast }>×</button>
         </div> }
     { selectedHistory && <div className="modal-backdrop" onMouseDown={ (event) => {
       if (event.target === event.currentTarget) setSelectedHistory(null);
@@ -606,27 +621,28 @@ export default function Workspace() {
                  aria-modal="true" aria-labelledby="history-modal-title">
             <div className="modal-head">
                 <div><span
-                    className="type-badge">{ isWordsTask(selectedHistory.taskType) ? 'СЛОВА' : isPasteBlankTask(selectedHistory.taskType) ? 'ПРОПУСКИ' : isTestTask(selectedHistory.taskType) ? 'ТЕСТ' : 'ПРЕДЛОЖЕНИЕ' }</span><h2
-                    id="history-modal-title">Разбор ошибки</h2>
-                    <time>{ dateLabel(selectedHistory.createdAt) }</time>
+                    className="type-badge">{ taskTypeName(t, selectedHistory.taskType).toLocaleUpperCase(locale) }</span><h2
+                    id="history-modal-title">{ t.app.historyModalTitle }</h2>
+                    <time>{ dateLabel(selectedHistory.createdAt, locale) }</time>
                 </div>
                 <button className="icon-button modal-close" onClick={ () => setSelectedHistory(null) }
-                        aria-label="Закрыть">×
+                        aria-label={ t.common.close }>×
                 </button>
             </div>
-            <div className="modal-task"><span>ЗАДАНИЕ</span>
+            <div className="modal-task"><span>{ t.labels.task }</span>
                 <p>{ taskToText(selectedHistory.task) }</p>
             </div>
             <div className="result-answers">
-                <div><span>ВАШ ВАРИАНТ</span><p>{ selectedHistory.userAnswer }</p></div>
-                <div><span>ПРАВИЛЬНО</span><p>{ selectedHistory.correctAnswer }</p></div>
+                <div><span>{ t.labels.yourAnswer }</span><p>{ selectedHistory.userAnswer }</p></div>
+                <div><span>{ t.labels.correct }</span><p>{ selectedHistory.correctAnswer }</p></div>
             </div>
             <div className="result-rule"/>
             <Markdown source={ selectedHistory.response }/>
             <div className="result-meta">
-                <span>{ selectedHistory.model }</span><span>·</span><span>Ответ на языке: { languageLabel(selectedHistory.language) }</span>
+                <span>{ selectedHistory.model }</span><span>·</span><span>{ t.common.answerInLanguage(languageLabel(selectedHistory.language)) }</span>
             </div>
         </section>
     </div> }
-  </div>;
+  </div>
+  </I18nProvider>;
 }

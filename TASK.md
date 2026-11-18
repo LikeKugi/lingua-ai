@@ -11,7 +11,7 @@ requests. Do not add accounts, analytics, or cloud sync.
 learner enters a word-building or sentence task, their answer, and the correct answer. The app sends these details to
 the learner’s chosen OpenAI-compatible provider, displays a structured explanation, and saves it in local history.
 
-The interface is in Russian. The response language is independently selectable. Support these response languages:
+The interface language is selectable in Settings from the same eleven languages; it defaults to the device language when supported, otherwise Russian. The response language is independently selectable. Support these response languages:
 Русский (`ru`), English (`en`), Deutsch (`de`), Français (`fr`), Español (`es`), Italiano (`it`), Português (`pt`), 中文
 (`zh`), 日本語 (`ja`), 한국어 (`ko`), and Türkçe (`tr`). Default to the device language when it is supported; otherwise default to
 Russian.
@@ -111,7 +111,7 @@ Default base system prompt:
 
 ### Настройки (Settings)
 
-- Include an API key field, base URL, model picker, **Загрузить модели**, **Проверить подключение**, response-language
+- Include an API key field, base URL, model picker, **Загрузить модели**, **Проверить подключение**, interface-language picker, response-language
   picker, and multiline prompt-suffix field. Store the key, URL, selected model, and other settings on the client.
 - Default the base URL to `https://api.openai.com/v1`. Validate that it is an HTTP or HTTPS URL before making a request.
   Mask the API key by default, indicate whether it is saved, let the user replace or clear it, and provide an explicit

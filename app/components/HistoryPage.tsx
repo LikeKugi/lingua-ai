@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type ChangeEvent, type Dispatch, type SetStateAction, useRef, useState } from "react";
 import { dateLabel, languageLabel, taskToText, isWordsTask, isSentenceTask, isPasteBlankTask, isTestTask, type HistoryItem, type TaskType } from "../lib";
 import type { Toast } from "./types";
+import { useI18n, taskTypeName } from "../i18n";
 
 interface HistoryPageProps {
   history: HistoryItem[];
@@ -39,6 +40,7 @@ export default function HistoryPage({
   onPracticeItem,
   showToast,
 }: HistoryPageProps) {
+  const { t, locale } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingImport, setPendingImport] = useState<HistoryItem[] | null>(null);
   const [markUnpracticed, setMarkUnpracticed] = useState(false);
@@ -50,7 +52,7 @@ export default function HistoryPage({
 
   const exportHistory = () => {
     if (history.length === 0) {
-      showToast("Нечего выгружать: история пуста.", "info");
+      showToast(t.history.exportEmpty, "info");
       return;
     }
     const payload = {
@@ -69,7 +71,7 @@ export default function HistoryPage({
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
-    showToast("История выгружена в файл.", "success");
+    showToast(t.history.exported, "success");
   };
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
@@ -86,17 +88,17 @@ export default function HistoryPage({
           throw new Error("bad-shape");
         }
         if (items.length === 0) {
-          showToast("Файл не содержит разборов.", "info");
+          showToast(t.history.importNoItems, "info");
           return;
         }
         setPendingImport(items.map((item) => ({ ...item, isPracticed: item.isPracticed ?? false })));
         setMarkUnpracticed(false);
       } catch {
-        showToast("Не удалось прочитать файл. Проверьте, что это корректный экспорт истории.", "error");
+        showToast(t.history.importReadError, "error");
       }
     };
     reader.onerror = () => {
-      showToast("Не удалось прочитать файл.", "error");
+      showToast(t.history.importFileError, "error");
     };
     reader.readAsText(file);
   };
@@ -113,7 +115,7 @@ export default function HistoryPage({
     setHistory(merged);
     setSelectedHistory(null);
     closeImport();
-    showToast(`Импортировано разборов: ${incoming.length}. Всего в истории: ${merged.length}.`, "success");
+    showToast(t.history.importMerged(incoming.length, merged.length), "success");
   };
 
   const replaceHistory = (incoming: HistoryItem[]) => {
@@ -124,24 +126,24 @@ export default function HistoryPage({
     setHistory(replaced);
     setSelectedHistory(null);
     closeImport();
-    showToast(`История заменена. Загружено разборов: ${replaced.length}.`, "success");
+    showToast(t.history.importReplaced(replaced.length), "success");
   };
 
   return (
-    <section className="history-list" aria-label="Сохранённые разборы">
+    <section className="history-list" aria-label={ t.history.listAria }>
       <div className="history-toolbar">
         <button
           type="button"
           className="button button-outline button-small"
           onClick={ exportHistory }
           disabled={ history.length === 0 }
-        >Экспорт
+        >{ t.history.exportBtn }
         </button>
         <button
           type="button"
           className="button button-outline button-small"
           onClick={ () => fileInputRef.current?.click() }
-        >Импорт
+        >{ t.history.importBtn }
         </button>
         <input
           ref={ fileInputRef }
@@ -154,9 +156,9 @@ export default function HistoryPage({
       { history.length === 0 ? (
         <div className="empty-state workspace-card">
           <span className="empty-illustration" aria-hidden="true">↗</span>
-          <h2>Здесь появятся ваши разборы</h2>
-          <p>После первого объяснения вы сможете вернуться к нему в любое время. Записи хранятся только в этом браузере.</p>
-          <Link className="button button-primary" href="/">Начать разбор <span className="button-arrow">↗</span></Link>
+          <h2>{ t.history.emptyTitle }</h2>
+          <p>{ t.history.emptyText }</p>
+          <Link className="button button-primary" href="/">{ t.common.startExplain } <span className="button-arrow">↗</span></Link>
         </div>
       ) : (
         history.map((item) => (
@@ -164,15 +166,15 @@ export default function HistoryPage({
             <button
               className="history-open"
               onClick={ () => setSelectedHistory(item) }
-              aria-label={ `Открыть разбор от ${ dateLabel(item.createdAt) }` }
+              aria-label={ t.history.openAria(dateLabel(item.createdAt, locale)) }
             >
               <div className="history-card-top">
-                <span className="type-badge">{ isWordsTask(item.taskType) ? "СЛОВА" : isPasteBlankTask(item.taskType) ? "ПРОПУСКИ" : isTestTask(item.taskType) ? "ТЕСТ" : "ПРЕДЛОЖЕНИЕ" }</span>
-                { item.isPracticed && <span className="practiced-badge">отработано</span> }
-                <time>{ dateLabel(item.createdAt) }</time>
+                <span className="type-badge">{ taskTypeName(t, item.taskType).toLocaleUpperCase(locale) }</span>
+                { item.isPracticed && <span className="practiced-badge">{ t.common.practiced }</span> }
+                <time>{ dateLabel(item.createdAt, locale) }</time>
               </div>
               <h2>{ taskToText(item.task) }</h2>
-              <p className="history-answer"><span>ВАШ ОТВЕТ</span> { item.userAnswer }</p>
+              <p className="history-answer"><span>{ t.labels.yourResponse }</span> { item.userAnswer }</p>
               <p className="history-preview">
                 { item.response.replace(/[#*_`]/g, "").slice(0, 190) }{ item.response.length > 190 ? "…" : "" }
               </p>
@@ -180,19 +182,19 @@ export default function HistoryPage({
             <div className="history-card-bottom">
               <span>{ item.model } · { languageLabel(item.language) }</span>
               <span className="history-actions">
-                <button type="button" className="button button-outline button-small" onClick={ () => setSelectedHistory(item) }>Открыть ↗</button>
-                <button type="button" className="button button-soft button-small" onClick={ () => onPracticeItem(item.id) } aria-label="Практиковать эту тему">Практиковать</button>
+                <button type="button" className="button button-outline button-small" onClick={ () => setSelectedHistory(item) }>{ t.history.open } ↗</button>
+                <button type="button" className="button button-soft button-small" onClick={ () => onPracticeItem(item.id) } aria-label={ t.history.practiceAria }>{ t.history.practice }</button>
               </span>
             </div>
             <button
               className="icon-button history-delete"
               onClick={ () => {
-                if (window.confirm("Удалить этот разбор из истории?")) {
+                if (window.confirm(t.history.confirmDelete)) {
                   setHistory((current) => current.filter((record) => record.id !== item.id));
-                  showToast("Разбор удалён.", "success");
+                  showToast(t.history.deleted, "success");
                 }
               } }
-              aria-label="Удалить разбор"
+              aria-label={ t.history.deleteAria }
             >×
             </button>
           </article>
@@ -211,9 +213,9 @@ export default function HistoryPage({
           >
             <div className="modal-head">
               <div>
-                <span className="type-badge">ИМПОРТ</span>
-                <h2 id="import-modal-title">Импорт разборов</h2>
-                <p className="page-lede">Найдено разборов: { pendingImport.length }. Как поступить с ними?</p>
+                <span className="type-badge">{ t.history.importTag }</span>
+                <h2 id="import-modal-title">{ t.history.importTitle }</h2>
+                <p className="page-lede">{ t.history.importFoundCount(pendingImport.length) }</p>
               </div>
             </div>
             <label className="import-option">
@@ -223,8 +225,8 @@ export default function HistoryPage({
                 onChange={ () => setMarkUnpracticed((value) => !value) }
               />
               <span>
-                <span className="import-option-title">Снять отметку «практиковано» со всех импортируемых разборов</span>
-                <span className="import-option-hint">Снимите, чтобы импортировать историю как есть — сохранится пометка из файла.</span>
+                <span className="import-option-title">{ t.history.unmarkTitle }</span>
+                <span className="import-option-hint">{ t.history.unmarkHint }</span>
               </span>
             </label>
             <div className="modal-actions">
@@ -232,19 +234,19 @@ export default function HistoryPage({
                 type="button"
                 className="button button-soft"
                 onClick={ () => extendHistory(pendingImport) }
-              >Дополнить мои разборы
+              >{ t.history.mergeBtn }
               </button>
               <button
                 type="button"
                 className="button button-primary"
                 onClick={ () => replaceHistory(pendingImport) }
-              >Заменить текущие
+              >{ t.history.replaceBtn }
               </button>
               <button
                 type="button"
                 className="button button-outline"
                 onClick={ () => closeImport() }
-              >Отмена
+              >{ t.common.cancel }
               </button>
             </div>
           </section>

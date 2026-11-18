@@ -110,6 +110,8 @@ export type Settings = {
   language: string;
   suffix: string;
   systemPrompt: string;
+  // Interface language (LANGUAGES code). Separate from `language`, which only sets the explanation language.
+  uiLanguage: string;
 };
 
 export const DEFAULT_SYSTEM_PROMPT = `Ты — опытный преподаватель иностранных языков.
@@ -145,7 +147,7 @@ export function languageLabel(code: string) {
 }
 
 export function defaultSettings(): Settings {
-  return { baseUrl: "https://api.openai.com/v1", model: "", language: "ru", suffix: "", systemPrompt: DEFAULT_SYSTEM_PROMPT };
+  return { baseUrl: "https://api.openai.com/v1", model: "", language: "ru", suffix: "", systemPrompt: DEFAULT_SYSTEM_PROMPT, uiLanguage: "ru" };
 }
 
 export function validBaseUrl(value: string) {
@@ -157,8 +159,8 @@ export function validBaseUrl(value: string) {
   }
 }
 
-export function dateLabel(timestamp: number) {
-  return new Intl.DateTimeFormat("ru-RU", { dateStyle: "long", timeStyle: "short" }).format(new Date(timestamp));
+export function dateLabel(timestamp: number, locale = "ru-RU") {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "long", timeStyle: "short" }).format(new Date(timestamp));
 }
 
 export function buildMessages(input: {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DEFAULT_SYSTEM_PROMPT, type Settings } from "../lib";
 import { Field } from "./ui";
 import type { Toast } from "./types";
+import { useI18n, withLink } from "../i18n";
 
 interface InstructionPageProps {
   settings: Settings;
@@ -16,18 +17,19 @@ export default function InstructionPage({
   updateSetting,
   showToast,
 }: InstructionPageProps) {
+  const { t, locale } = useI18n();
   return (
     <section className="instruction-page workspace-card">
       <div className="instruction-overline">
         <span className="instruction-icon">≡</span>
         <div>
-          <span className="section-kicker">ОСНОВА КАЖДОГО РАЗБОРА</span>
-          <p>Эту инструкцию вы задаёте модели вместе с заданием, ответами и включёнными правилами.</p>
+          <span className="section-kicker">{ t.instruction.kicker }</span>
+          <p>{ t.instruction.lede }</p>
         </div>
       </div>
       <Field
-        label="Системная инструкция"
-        hint={ `${ settings.systemPrompt.length.toLocaleString("ru-RU") } символов · сохраняется автоматически` }
+        label={ t.instruction.systemLabel }
+        hint={ t.instruction.charsCount(settings.systemPrompt.length.toLocaleString(locale)) }
       >
         <textarea
           className="text-area system-prompt"
@@ -37,21 +39,21 @@ export default function InstructionPage({
         />
       </Field>
       <div className="instruction-footer">
-        <span className="saved-inline"><span className="saved-dot" />Изменения сохраняются автоматически</span>
+        <span className="saved-inline"><span className="saved-dot" />{ t.instruction.savedAuto }</span>
         <button
           className="button button-outline"
           onClick={ () => {
-            if (window.confirm("Вернуть стандартную инструкцию? Ваши промпты и суффикс останутся без изменений.")) {
+            if (window.confirm(t.instruction.resetConfirm)) {
               updateSetting("systemPrompt", DEFAULT_SYSTEM_PROMPT);
-              showToast("Стандартная инструкция восстановлена.", "success");
+              showToast(t.instruction.resetDone, "success");
             }
           } }
-        >Сбросить к стандартной
+        >{ t.instruction.resetBtn }
         </button>
       </div>
       <div className="privacy-note">
         <span aria-hidden="true">✳</span>
-        <p>В запрос также входят активные правила из раздела <Link href="/prompts">«Промпты»</Link> и дополнительный суффикс из настроек.</p>
+        <p>{ withLink(t.instruction.note, <Link href="/prompts">{ t.nav.prompts }</Link>) }</p>
       </div>
     </section>
   );

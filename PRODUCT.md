@@ -17,7 +17,7 @@ Teachers and tutors are a real second audience, not an afterthought: they open t
 explanation of a specific student's mistake to hand back. No teacher-specific mode exists or was requested.
 
 The learner's own language of study is unconstrained by the product; nothing in it is built for one target language.
-The interface speaks Russian, and the explanation may come back in any of eleven supported languages.
+The interface can be shown in any of eleven supported languages, and the explanation may come back in any of them.
 
 Sessions happen on a laptop, a tablet, or a phone — all three are first-class, none is the fallback. Sessions are
 short and easily interrupted.
@@ -100,8 +100,9 @@ exists or was requested. There is no picker for the language being studied. Do n
 ## Brand Commitments
 
 - **Name:** Лингва, set in caps as **ЛИНГВА**, positioned as an AI error explainer. Fixed.
-- **UI language is Russian.** Every label, placeholder, helper, empty state, offline notice, error, confirmation, and
-  date is Russian. No English string belongs in the interface.
+- **UI language is selectable.** Settings has an interface-language picker with the same eleven languages as the
+  response picker. Every label, placeholder, helper, empty state, offline notice, error, confirmation, and date follows
+  it. Built-in rule text and the default system instruction stay Russian, because they are sent to the model.
 - **Voice:** friendly, structured, no filler. This governs the product's own copy and is also demanded of the
   explanation the model returns. Direct address, concrete about the mistake.
 - **No existing identity.** No logo, no icon, no chosen or licensed font, no brandbook — all of it is to be authored.

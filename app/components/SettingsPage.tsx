@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef, type Dispatch, type SetStateAction } from "react";
 import { LANGUAGES, type Settings } from "../lib";
+import { useI18n } from "../i18n";
 import { Field } from "./ui";
 
 interface SettingsPageProps {
@@ -48,6 +49,7 @@ export default function SettingsPage({
   setInstallPrompt,
   requestModels,
 }: SettingsPageProps) {
+  const { t } = useI18n();
   const fileInputRef = useRef<HTMLInputElement>(null);
   return (
     <section className="settings-grid">
@@ -56,11 +58,11 @@ export default function SettingsPage({
           <div className="card-heading">
             <span className="card-index">01</span>
             <div>
-              <h2>Подключение к модели</h2>
-              <p>Используйте ключ своего OpenAI-совместимого сервиса.</p>
+              <h2>{ t.settings.connectionTitle }</h2>
+              <p>{ t.settings.connectionLede }</p>
             </div>
           </div>
-          <Field label="Базовый URL">
+          <Field label={ t.settings.baseUrlLabel }>
             <input
               className="text-input mono-input"
               type="url"
@@ -70,47 +72,47 @@ export default function SettingsPage({
             />
           </Field>
           <Field
-            label="Ключ API"
+            label={ t.settings.apiKeyLabel }
             controlId="api-key-field"
-            hint="Браузер не предоставляет защищённого хранилища. Сохранённый ключ находится в localStorage этого браузера."
+            hint={ t.settings.apiKeyHint }
           >
             <div className="key-field">
               <input
                 id="api-key-field"
-                aria-label="Ключ API"
+                aria-label={ t.settings.apiKeyLabel }
                 className="text-input mono-input"
                 type={ keyVisible ? "text" : "password" }
                 autoComplete="off"
                 value={ keyDraft }
                 onChange={ (event) => setKeyDraft(event.target.value) }
-                placeholder={ apiKey ? "Ключ сохранён — введите замену" : "Введите ключ API" }
+                placeholder={ apiKey ? t.settings.apiKeyPlaceholderSaved : t.settings.apiKeyPlaceholder }
               />
               <button
                 type="button"
                 className="key-toggle"
                 onClick={ () => setKeyVisible((value) => !value) }
-              >{ keyVisible ? "Скрыть" : "Показать" }</button>
+              >{ keyVisible ? t.settings.hideKey : t.settings.showKey }</button>
             </div>
             <div className="key-status">
               <span className={ `saved-dot ${ apiKey ? "" : "empty" }` } />
-              { apiKey ? "Ключ сохранён в этом браузере" : "Ключ ещё не сохранён" }
+              { apiKey ? t.settings.keySavedStatus : t.settings.keyNotSavedStatus }
             </div>
             <div className="inline-actions key-actions">
-              <button className="button button-outline button-small" type="button" onClick={ saveKey }>Сохранить ключ
+              <button className="button button-outline button-small" type="button" onClick={ saveKey }>{ t.settings.saveKeyBtn }
               </button>
               { apiKey &&
-                <button className="text-danger" type="button" onClick={ clearKey }>Удалить ключ</button> }
+                <button className="text-danger" type="button" onClick={ clearKey }>{ t.settings.deleteKeyBtn }</button> }
             </div>
           </Field>
-          <Field label="Модель">
+          <Field label={ t.settings.modelLabel }>
             <select
               className="text-input"
               value={ settings.model }
               onChange={ (event) => updateSetting("model", event.target.value) }
             >
-              <option value="">Выберите модель</option>
+              <option value="">{ t.settings.selectModel }</option>
               { settings.model && !models.includes(settings.model) &&
-                <option value={ settings.model }>{ settings.model } · текущая</option> }
+                <option value={ settings.model }>{ t.settings.currentModel(settings.model) }</option> }
               { models.map((model) => <option key={ model } value={ model }>{ model }</option>) }
             </select>
           </Field>
@@ -120,13 +122,13 @@ export default function SettingsPage({
               type="button"
               onClick={ () => requestModels("models") }
               disabled={ Boolean(settingsBusy) }
-            >{ settingsBusy === "models" ? <><span className="mini-loader" />Загружаем…</> : "Загрузить модели" }</button>
+            >{ settingsBusy === "models" ? <><span className="mini-loader" />{ t.settings.loadingModelsBtn }</> : t.settings.loadModels }</button>
             <button
               className="button button-soft button-small"
               type="button"
               onClick={ () => requestModels("check") }
               disabled={ Boolean(settingsBusy) }
-            >{ settingsBusy === "check" ? <><span className="mini-loader" />Проверяем…</> : "Проверить подключение" }</button>
+            >{ settingsBusy === "check" ? <><span className="mini-loader" />{ t.common.checking }</> : t.settings.checkConnection }</button>
           </div>
           { providerStatus && (
             <div
@@ -134,17 +136,35 @@ export default function SettingsPage({
               role="status"
             >{ providerStatus }</div>
           ) }
-          <p className="provider-hint">Поддерживаются OpenAI, OpenRouter, Groq, Together, DeepSeek, Mistral, Ollama и LM Studio.</p>
+          <p className="provider-hint">{ t.settings.providersHint }</p>
         </section>
         <section className="workspace-card settings-card">
           <div className="card-heading">
             <span className="card-index">02</span>
             <div>
-              <h2>Язык ответа</h2>
-              <p>Язык объяснения выбирается отдельно от языка задания.</p>
+              <h2>{ t.settings.interfaceTitle }</h2>
+              <p>{ t.settings.interfaceLede }</p>
             </div>
           </div>
-          <Field label="Отвечать на языке">
+          <Field label={ t.settings.interfaceLabel }>
+            <select
+              className="text-input language-select"
+              value={ settings.uiLanguage }
+              onChange={ (event) => updateSetting("uiLanguage", event.target.value) }
+            >
+              { LANGUAGES.map(([code, label]) => <option key={ code } value={ code }>{ label }</option>) }
+            </select>
+          </Field>
+        </section>
+        <section className="workspace-card settings-card">
+          <div className="card-heading">
+            <span className="card-index">03</span>
+            <div>
+              <h2>{ t.settings.responseTitle }</h2>
+              <p>{ t.settings.responseLede }</p>
+            </div>
+          </div>
+          <Field label={ t.settings.responseLabel }>
             <select
               className="text-input language-select"
               value={ settings.language }
@@ -155,39 +175,39 @@ export default function SettingsPage({
           </Field>
           <div className="field suffix-field">
             <Field
-              label="Дополнительная инструкция"
-              hint="Добавляется после активных правил и перед указанием языка ответа."
+              label={ t.settings.suffixLabel }
+              hint={ t.settings.suffixHint }
             >
               <textarea
                 className="text-area"
                 rows={ 4 }
                 value={ settings.suffix }
                 onChange={ (event) => updateSetting("suffix", event.target.value) }
-                placeholder="Например: используй короткие примеры из повседневной речи…"
+                placeholder={ t.settings.suffixPlaceholder }
               />
             </Field>
           </div>
         </section>
         <section className="workspace-card settings-card">
           <div className="card-heading">
-            <span className="card-index">03</span>
+            <span className="card-index">04</span>
             <div>
-              <h2>Экспорт и импорт</h2>
-              <p>Сохраните настройки в файл или восстановите их на другом устройстве.</p>
+              <h2>{ t.settings.exportTitle }</h2>
+              <p>{ t.settings.exportLede }</p>
             </div>
           </div>
-          <p className="export-hint">Ключ API и адрес сервиса записываются в файл в замаскированном виде — в открытом тексте они не хранятся.</p>
+          <p className="export-hint">{ t.settings.exportHint }</p>
           <div className="inline-actions">
             <button
               type="button"
               className="button button-outline button-small"
               onClick={ exportSettings }
-            >Экспорт настроек</button>
+            >{ t.settings.exportBtn }</button>
             <button
               type="button"
               className="button button-outline button-small"
               onClick={ () => fileInputRef.current?.click() }
-            >Импорт настроек</button>
+            >{ t.settings.importBtn }</button>
             <input
               ref={ fileInputRef }
               type="file"
@@ -205,15 +225,15 @@ export default function SettingsPage({
       <aside className="settings-aside">
         <div className="provider-note">
           <span className="provider-note-icon">✳</span>
-          <span className="section-kicker">ВАШ ВЫБОР</span>
-          <h2>Вы выбираете модель и оплачиваете её напрямую.</h2>
-          <p>Лингва бесплатна и не добавляет подписок или платы за запросы. Стоимость использования определяет ваш провайдер.</p>
+          <span className="section-kicker">{ t.settings.aboutKicker }</span>
+          <h2>{ t.settings.aboutTitle }</h2>
+          <p>{ t.settings.aboutText }</p>
         </div>
         <div className="privacy-card">
           <span className="privacy-lock" aria-hidden="true">⌑</span>
-          <h3>Данные остаются у вас</h3>
-          <p>История, инструкции и настройки хранятся в браузере. Ключ отправляется только на сервер Лингвы при проверке или запросе, а оттуда — выбранному сервису.</p>
-          <Link href="/instruction">Как формируется запрос <span>↗</span></Link>
+          <h3>{ t.settings.privacyTitle }</h3>
+          <p>{ t.settings.privacyText }</p>
+          <Link href="/instruction">{ t.settings.privacyLink } <span>↗</span></Link>
         </div>
         { installPrompt ? (
           <button
@@ -225,13 +245,13 @@ export default function SettingsPage({
             } }
           >
             <span>＋</span>
-            <b>Установить Лингву</b>
-            <small>Добавить приложение на устройство</small>
+            <b>{ t.install.cardTitle }</b>
+            <small>{ t.install.cardHint }</small>
           </button>
         ) : (
           <div className="install-note">
             <span className="install-note-mark">↗</span>
-            <h3>Установка приложения</h3>
+            <h3>{ t.settings.installTitle }</h3>
             <p>{ installInstructions }</p>
           </div>
         ) }
@@ -239,4 +259,3 @@ export default function SettingsPage({
     </section>
   );
 }
-

@@ -50,7 +50,7 @@ npm run lint     # Run ESLint
 - **История** — revisit or delete saved explanations. Any saved explanation can be turned into a practice set: pick a theme, choose the same task type or any available type, and the app asks the model to generate ten training exercises, then checks your answers and marks the theme as practised once all are correct.
 - **Промпты** — manage built-in and custom explanation rules.
 - **Инструкция** — edit the base system instruction.
-- **Настройки** — configure the provider, model, response language, and optional prompt suffix.
+- **Настройки** — configure the provider, model, interface language, response language, and optional prompt suffix.
 
 ## Screenshots
 

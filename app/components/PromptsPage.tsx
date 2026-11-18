@@ -2,6 +2,7 @@
 
 import type { Dispatch, SetStateAction } from "react";
 import type { PromptTemplate } from "../lib";
+import { useI18n } from "../i18n";
 import { Field } from "./ui";
 import type { Toast } from "./types";
 
@@ -33,14 +34,15 @@ export default function PromptsPage({
   setPromptForm,
   showToast,
 }: PromptsPageProps) {
+  const { t } = useI18n();
   return (
     <section className="prompt-list">
       <div className="section-intro">
         <div>
-          <span className="section-kicker">ПРАВИЛА РАЗБОРА</span>
-          <h2>На что обратить внимание</h2>
+          <span className="section-kicker">{ t.prompts.kicker }</span>
+          <h2>{ t.prompts.title }</h2>
         </div>
-        <p>Включённые правила добавляются к системной инструкции каждого нового запроса.</p>
+        <p>{ t.prompts.lede }</p>
       </div>
       { prompts.map((prompt) => (
         <article
@@ -55,7 +57,7 @@ export default function PromptsPage({
                 onSubmit={ (event) => {
                 event.preventDefault();
                 if (!editingValue.title.trim() || !editingValue.body.trim()) {
-                  showToast("Заполните название и текст правила.", "error");
+                  showToast(t.prompts.editInvalid, "error");
                   return;
                 }
                 setPrompts((current) =>
@@ -65,10 +67,10 @@ export default function PromptsPage({
                       : item),
                 );
                 setEditingPrompt(null);
-                showToast("Правило обновлено.", "success");
+                showToast(t.prompts.updated, "success");
               } }
             >
-              <Field label="Название">
+              <Field label={ t.prompts.nameLabel }>
                 <input
                   className="text-input"
                   value={ editingValue.title }
@@ -76,7 +78,7 @@ export default function PromptsPage({
                     setEditingValue((current) => ({ ...current, title: event.target.value })) }
                 />
               </Field>
-              <Field label="Инструкция">
+              <Field label={ t.prompts.bodyLabel }>
                 <textarea
                   className="text-area"
                   rows={ 3 }
@@ -86,12 +88,12 @@ export default function PromptsPage({
                 />
               </Field>
               <div className="inline-actions">
-                <button className="button button-primary button-small">Сохранить</button>
+                <button className="button button-primary button-small">{ t.common.save }</button>
                 <button
                   className="button button-outline button-small"
                   type="button"
                   onClick={ () => setEditingPrompt(null) }
-                >Отмена
+                >{ t.common.cancel }
                 </button>
               </div>
               </form>
@@ -102,14 +104,14 @@ export default function PromptsPage({
               <div className="prompt-copy">
                 <div className="prompt-title-line">
                   <h3>{ prompt.title }</h3>
-                  { prompt.builtin && <span className="builtin-tag">ВСТРОЕННЫЙ</span> }
+                  { prompt.builtin && <span className="builtin-tag">{ t.prompts.builtin }</span> }
                 </div>
                 <p>{ prompt.body }</p>
               </div>
               <div className="prompt-actions">
                 <button
                   className="icon-button edit-button"
-                  aria-label={ `Редактировать правило «${ prompt.title }»` }
+                  aria-label={ t.prompts.editAria(prompt.title) }
                   onClick={ () => {
                     setEditingValue({ title: prompt.title, body: prompt.body });
                     setEditingPrompt(prompt.id);
@@ -118,7 +120,7 @@ export default function PromptsPage({
                 </button>
                 <label
                   className="switch"
-                  aria-label={ `${ prompt.enabled ? "Отключить" : "Включить" } правило «${ prompt.title }»` }
+                  aria-label={ prompt.enabled ? t.prompts.disableAria(prompt.title) : t.prompts.enableAria(prompt.title) }
                 >
                   <input
                     type="checkbox"
@@ -134,11 +136,11 @@ export default function PromptsPage({
                 { !prompt.builtin && (
                   <button
                     className="icon-button delete-prompt"
-                    aria-label={ `Удалить правило «${ prompt.title }»` }
+                    aria-label={ t.prompts.deleteAria(prompt.title) }
                     onClick={ () => {
-                      if (window.confirm(`Удалить правило «${ prompt.title }»?`)) {
+                      if (window.confirm(t.prompts.confirmDelete(prompt.title))) {
                         setPrompts((current) => current.filter((item) => item.id !== prompt.id));
-                        showToast("Правило удалено.", "success");
+                        showToast(t.prompts.deleted, "success");
                       }
                     } }
                   >×
@@ -154,7 +156,7 @@ export default function PromptsPage({
         onSubmit={ (event) => {
           event.preventDefault();
           if (!promptForm.title.trim() || !promptForm.body.trim()) {
-            showToast("Укажите название и инструкцию для правила.", "error");
+            showToast(t.prompts.addInvalid, "error");
             return;
           }
           setPrompts((current) => [
@@ -168,36 +170,36 @@ export default function PromptsPage({
             },
           ]);
           setPromptForm({ title: "", body: "" });
-          showToast("Новое правило добавлено.", "success");
+          showToast(t.prompts.added, "success");
         } }
       >
         <div className="add-prompt-heading">
           <span className="add-icon">＋</span>
           <div>
-            <h2>Добавить своё правило</h2>
-            <p>Создайте дополнительный фокус для разбора.</p>
+            <h2>{ t.prompts.addTitle }</h2>
+            <p>{ t.prompts.addLede }</p>
           </div>
         </div>
-        <Field label="Название">
+        <Field label={ t.prompts.nameLabel }>
           <input
             className="text-input"
             value={ promptForm.title }
             onChange={ (event) =>
               setPromptForm((current) => ({ ...current, title: event.target.value })) }
-            placeholder="Например, Произношение"
+            placeholder={ t.prompts.namePlaceholder }
           />
         </Field>
-        <Field label="Инструкция">
+        <Field label={ t.prompts.bodyLabel }>
           <textarea
             className="text-area"
             rows={ 3 }
             value={ promptForm.body }
             onChange={ (event) =>
               setPromptForm((current) => ({ ...current, body: event.target.value })) }
-            placeholder="Что модель должна проверить?"
+            placeholder={ t.prompts.bodyPlaceholder }
           />
         </Field>
-        <button className="button button-primary button-small">Добавить правило <span className="button-arrow">↗</span></button>
+        <button className="button button-primary button-small">{ t.prompts.addBtn } <span className="button-arrow">↗</span></button>
       </form>
     </section>
   );

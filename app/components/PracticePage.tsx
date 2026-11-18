@@ -13,6 +13,8 @@ import {
   type Settings,
   type TaskType,
 } from "../lib";
+import { taskTypeName, useI18n } from "../i18n";
+import type { Messages } from "../i18n/ru";
 import type { Toast } from "./types";
 import { Field } from "./ui";
 
@@ -29,26 +31,26 @@ interface PracticePageProps {
 type Step = "setup" | "practice" | "result";
 type CheckResult = { index: number; correct: boolean; comment: string };
 
-function providerError(status: number, code?: string): string {
-  if (code === "invalid_url") return "Укажите корректный адрес сервиса, начинающийся с http:// или https://.";
-  if (code === "missing_key") return "Введите ключ API перед отправкой.";
-  if (code === "missing_model") return "Выберите модель в настройках.";
-  if (status === 401) return "Сервис отклонил ключ. Проверьте его и попробуйте снова.";
-  if (status === 404) return "Сервис не нашёл адрес моделей или выбранную модель.";
-  if (code === "timeout") return "Сервис не ответил вовремя. Проверьте соединение и повторите попытку.";
-  if (code === "network") return "Не удалось связаться с сервисом. Проверьте интернет и адрес.";
-  if (code === "empty_response") return "Модель вернула пустой ответ. Попробуйте другую модель.";
-  return "Запрос не выполнен. Проверьте адрес, ключ и настройки модели.";
+function providerError(t: Messages, status: number, code?: string): string {
+  if (code === "invalid_url") return t.errors.invalidUrl;
+  if (code === "missing_key") return t.errors.missingKeySend;
+  if (code === "missing_model") return t.errors.missingModel;
+  if (status === 401) return t.errors.unauthorized;
+  if (status === 404) return t.errors.notFound;
+  if (code === "timeout") return t.errors.timeout;
+  if (code === "network") return t.errors.network;
+  if (code === "empty_response") return t.errors.emptyResponse;
+  return t.errors.generic;
 }
 
-function errorMessage(error: unknown): string {
+function errorMessage(t: Messages, error: unknown): string {
   if (error instanceof Error) {
     if ("safeMessage" in error) return String((error as { safeMessage: unknown }).safeMessage);
-    if (error.name === "TimeoutError") return providerError(0, "timeout");
-    if (error instanceof SyntaxError) return "Модель вернула ответ в неожиданном формате. Попробуйте ещё раз.";
-    return providerError(0, "network");
+    if (error.name === "TimeoutError") return providerError(t, 0, "timeout");
+    if (error instanceof SyntaxError) return t.errors.unexpectedFormat;
+    return providerError(t, 0, "network");
   }
-  return "Не удалось выполнить запрос.";
+  return t.errors.requestNotSent;
 }
 
 function extractJson(text: string): string {
@@ -192,6 +194,7 @@ export default function PracticePage({
   online,
   showToast,
 }: PracticePageProps) {
+  const { t, locale } = useI18n();
   const [selectedId, setSelectedId] = useState<string | null>(initialItemId);
   const [mode, setMode] = useState<PracticeMode>("same");
   const [step, setStep] = useState<Step>("setup");
@@ -216,9 +219,9 @@ export default function PracticePage({
     mode === "same" && selectedItem ? [selectedItem.taskType] : ANY_PRACTICE_TYPES;
 
   const configMissing: string[] = [];
-  if (!apiKey.trim()) configMissing.push("ключ API");
-  if (!settings.baseUrl.trim()) configMissing.push("адрес сервиса");
-  if (!settings.model.trim()) configMissing.push("модель");
+  if (!apiKey.trim()) configMissing.push(t.explain.missingItems.apiKey);
+  if (!settings.baseUrl.trim()) configMissing.push(t.explain.missingItems.baseUrl);
+  if (!settings.model.trim()) configMissing.push(t.explain.missingItems.model);
 
   const setAnswer = (index: number, value: string, blankIndex = 0) => {
     setAnswers((prev) => {
@@ -244,8 +247,8 @@ export default function PracticePage({
       cache: "no-store",
     });
     const data = (await response.json()) as { response?: string; error?: string; code?: string };
-    if (!response.ok) throw Object.assign(new Error(providerError(response.status, data.code)), { safeMessage: providerError(response.status, data.code) });
-    if (!data.response?.trim()) throw Object.assign(new Error(providerError(0, "empty_response")), { safeMessage: providerError(0, "empty_response") });
+    if (!response.ok) throw Object.assign(new Error(providerError(t, response.status, data.code)), { safeMessage: providerError(t, response.status, data.code) });
+    if (!data.response?.trim()) throw Object.assign(new Error(providerError(t, 0, "empty_response")), { safeMessage: providerError(t, 0, "empty_response") });
     return data.response;
   };
 
@@ -261,7 +264,7 @@ export default function PracticePage({
       setAnswers(parsed.map((issue) => (issue.kind === "paste-blank" ? issue.blanks.map(() => "") : [""])));
       setStep("practice");
     } catch (caught) {
-      const message = errorMessage(caught);
+      const message = errorMessage(t, caught);
       setError(message);
       showToast(message, "error");
     } finally {
@@ -272,7 +275,7 @@ export default function PracticePage({
   const check = async () => {
     if (busy || !online) return;
     if (!allAnswered()) {
-      setError("Ответьте на все задания, прежде чем проверять.");
+      setError(t.practice.answerAll);
       return;
     }
     setBusy("check");
@@ -286,16 +289,16 @@ export default function PracticePage({
       if (allCorrect) {
         if (selectedItem && !selectedItem.isPracticed) {
           setHistory((prev) => prev.map((item) => (item.id === selectedItem.id ? { ...item, isPracticed: true } : item)));
-          showToast("Все задания верны — тема отмечена как отработанная.", "success");
+          showToast(t.practice.allCorrectMarked, "success");
         } else {
-          showToast("Все задания верны!", "success");
+          showToast(t.practice.allCorrect, "success");
         }
       } else {
-        showToast(`Верно ${correctCount} из ${issues.length}. Проверьте пояснения и попробуйте исправить.`, "info");
+        showToast(t.practice.partialResult(correctCount, issues.length), "info");
       }
       setStep("result");
     } catch (caught) {
-      const message = errorMessage(caught);
+      const message = errorMessage(t, caught);
       setError(message);
       showToast(message, "error");
     } finally {
@@ -308,9 +311,9 @@ export default function PracticePage({
       <section className="practice-page">
         <div className="empty-state workspace-card">
           <span className="empty-illustration" aria-hidden="true">✳</span>
-          <h2>Нет тем для тренировки</h2>
-          <p>Сначала разберите ошибку в разделе «Разбор». Сохранённые разборы станут темами для практики.</p>
-          <Link className="button button-primary" href="/">Начать разбор <span className="button-arrow">↗</span></Link>
+          <h2>{t.practice.emptyTitle}</h2>
+          <p>{t.practice.emptyText}</p>
+          <Link className="button button-primary" href="/">{t.practice.startExplain} <span className="button-arrow">↗</span></Link>
         </div>
       </section>
     );
@@ -322,7 +325,7 @@ export default function PracticePage({
     <section className="practice-page">
       {step === "setup" && (
         <div className="practice-setup">
-          <Field label="Тема для тренировки">
+          <Field label={t.practice.topicLabel}>
             <select
               className="text-input theme-select"
               value={selectedItem?.id ?? ""}
@@ -330,7 +333,7 @@ export default function PracticePage({
             >
               {sortedHistory.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {taskTypeLabel(item.taskType)} · {taskToText(item.task).slice(0, 60)}
+                  {taskTypeName(t, item.taskType)} · {taskToText(item.task).slice(0, 60)}
                 </option>
               ))}
             </select>
@@ -339,18 +342,18 @@ export default function PracticePage({
           {selectedItem && (
             <div className="workspace-card theme-card">
               <div className="history-card-top">
-                <span className="type-badge">{taskTypeLabel(selectedItem.taskType).toLocaleUpperCase("ru-RU")}</span>
-                {selectedItem.isPracticed && <span className="practiced-badge">отработано</span>}
+                <span className="type-badge">{taskTypeName(t, selectedItem.taskType).toLocaleUpperCase(locale)}</span>
+                {selectedItem.isPracticed && <span className="practiced-badge">{t.common.practiced}</span>}
               </div>
               <div className="theme-fields">
-                <div><span>ЗАДАНИЕ</span><p>{taskToText(selectedItem.task)}</p></div>
-                <div><span>ВАШ ОТВЕТ</span><p>{selectedItem.userAnswer}</p></div>
-                <div><span>ПРАВИЛЬНО</span><p>{selectedItem.correctAnswer}</p></div>
+                <div><span>{t.labels.task}</span><p>{taskToText(selectedItem.task)}</p></div>
+                <div><span>{t.labels.yourResponse}</span><p>{selectedItem.userAnswer}</p></div>
+                <div><span>{t.labels.correct}</span><p>{selectedItem.correctAnswer}</p></div>
               </div>
             </div>
           )}
 
-          <div className="mode-switch" role="radiogroup" aria-label="Тип заданий для практики">
+          <div className="mode-switch" role="radiogroup" aria-label={t.practice.modeAria}>
             <button
               type="button"
               role="radio"
@@ -358,7 +361,7 @@ export default function PracticePage({
               className={mode === "same" ? "selected" : ""}
               onClick={() => setMode("same")}
             >
-              Тот же тип{selectedItem ? ` (${taskTypeLabel(selectedItem.taskType)})` : ""}
+              {selectedItem ? t.practice.modeSameWith(taskTypeName(t, selectedItem.taskType)) : t.practice.modeSame}
             </button>
             <button
               type="button"
@@ -367,23 +370,23 @@ export default function PracticePage({
               className={mode === "any" ? "selected" : ""}
               onClick={() => setMode("any")}
             >
-              Любой доступный
+              {t.practice.modeAny}
             </button>
           </div>
           <p className="allowed-note">
             {mode === "same"
-              ? `Задания будут того же типа: ${taskTypeLabel(selectedItem?.taskType ?? "sentence")}.`
-              : "Задания могут быть любого из типов: Предложение, Пропуски, Тест."}
+              ? t.practice.sameNote(taskTypeName(t, selectedItem?.taskType ?? "sentence"))
+              : t.practice.anyNote(ANY_PRACTICE_TYPES.map((type) => taskTypeName(t, type)).join(t.common.listSeparator))}
           </p>
 
           {configMissing.length > 0 && (
             <div className="missing-note">
               <span className="missing-mark" aria-hidden="true">i</span>
-              <span>Чтобы тренироваться, добавьте {configMissing.join(", ")}. <Link href="/settings">Открыть настройки</Link>.</span>
+              <span>{t.practice.missingNote(configMissing.join(t.common.listSeparator))} <Link href="/settings">{t.practice.openSettings}</Link></span>
             </div>
           )}
           {!online && (
-            <div className="inline-alert" role="status">Сейчас нет интернета. Тренировку можно начать после подключения.</div>
+            <div className="inline-alert" role="status">{t.practice.offline}</div>
           )}
           {error && <div className="inline-alert" role="alert">{error}</div>}
 
@@ -394,7 +397,7 @@ export default function PracticePage({
               onClick={generate}
               disabled={Boolean(busy) || !online || configMissing.length > 0 || !selectedItem}
             >
-              <span>{busy === "generate" ? "Составляем задания…" : "Создать 10 заданий"}</span>
+              <span>{busy === "generate" ? t.practice.generating : t.practice.generate}</span>
               <span className="button-arrow" aria-hidden="true">↗</span>
             </button>
           </div>
@@ -402,8 +405,8 @@ export default function PracticePage({
             <div className="loading-card" role="status">
               <span className="loader" />
               <span>
-                <b>Готовим тренировку</b>
-                <small>Модель составляет 10 заданий по выбранной теме…</small>
+                <b>{t.practice.preparingTitle}</b>
+                <small>{t.practice.preparingText}</small>
               </span>
             </div>
           )}
@@ -412,28 +415,28 @@ export default function PracticePage({
 
       {step === "practice" && (
         <div className="practice-run">
-          <p className="page-lede">Ответьте на 10 заданий по теме «{selectedItem ? taskToText(selectedItem.task).slice(0, 80) : ""}».</p>
+          <p className="page-lede">{t.practice.lede(selectedItem ? taskToText(selectedItem.task).slice(0, 80) : "")}</p>
           <div className="issue-list">
             {issues.map((issue, index) => (
               <article key={index} className="workspace-card issue-card">
                 <div className="issue-head">
                   <span className="issue-num">{index + 1}</span>
-                  <span className="type-badge">{taskTypeLabel(issue.kind).toLocaleUpperCase("ru-RU")}</span>
+                  <span className="type-badge">{taskTypeName(t, issue.kind).toLocaleUpperCase(locale)}</span>
                 </div>
                 {issue.kind === "sentence" && (
-                  <Field label="Переведите или переделайте">
+                  <Field label={t.practice.sentenceTask}>
                     <p className="issue-prompt">{issue.prompt}</p>
                     <textarea
                       className="text-area"
                       rows={2}
                       value={answers[index]?.[0] ?? ""}
                       onChange={(event) => setAnswer(index, event.target.value)}
-                      placeholder="Ваш ответ…"
+                      placeholder={t.practice.answerPlaceholder}
                     />
                   </Field>
                 )}
                 {issue.kind === "words" && (
-                  <Field label={issue.description ?? "Составьте предложение из слов"}>
+                  <Field label={issue.description ?? t.practice.wordsTask}>
                     <div className="word-chips">
                       {issue.words.map((word, wordIndex) => (
                         <span className="chip" key={wordIndex}>{word}</span>
@@ -444,7 +447,7 @@ export default function PracticePage({
                       rows={2}
                       value={answers[index]?.[0] ?? ""}
                       onChange={(event) => setAnswer(index, event.target.value)}
-                      placeholder="Ваше предложение…"
+                      placeholder={t.practice.wordsAnswerPlaceholder}
                     />
                   </Field>
                 )}
@@ -452,7 +455,7 @@ export default function PracticePage({
                   const parts = blankParts(issue.text);
                   const blankCount = Math.min(parts.length - 1, issue.blanks.length);
                   return (
-                    <Field label="Вставьте пропущенные слова">
+                    <Field label={t.practice.blankTask}>
                       <p className="issue-prompt">
                         {parts.map((part, partIndex) => (
                           <Fragment key={partIndex}>
@@ -462,7 +465,7 @@ export default function PracticePage({
                                 className="blank-input text-input"
                                 value={answers[index]?.[partIndex] ?? ""}
                                 onChange={(event) => setAnswer(index, event.target.value, partIndex)}
-                                aria-label={`Пропуск ${partIndex + 1}`}
+                                aria-label={t.practice.blankAria(partIndex + 1)}
                               />
                             )}
                           </Fragment>
@@ -475,9 +478,9 @@ export default function PracticePage({
                   );
                 })()}
                 {issue.kind === "test" && (
-                  <Field label="Выберите верный вариант">
+                  <Field label={t.practice.testTask}>
                     <p className="issue-prompt">{issue.question}</p>
-                    <div className="option-list" role="radiogroup" aria-label={`Варианты задания ${index + 1}`}>
+                    <div className="option-list" role="radiogroup" aria-label={t.practice.variantsAria(index + 1)}>
                       {issue.variants.map((variant, variantIndex) => (
                         <label
                           key={variantIndex}
@@ -505,8 +508,8 @@ export default function PracticePage({
             <div className="loading-card" role="status">
               <span className="loader" />
               <span>
-                <b>Проверяем ответы</b>
-                <small>Модель сверяет ваши ответы с правильными…</small>
+                <b>{t.practice.checkingTitle}</b>
+                <small>{t.practice.checkingText}</small>
               </span>
             </div>
           )}
@@ -518,11 +521,11 @@ export default function PracticePage({
               onClick={check}
               disabled={Boolean(busy) || !online}
             >
-              <span>{busy === "check" ? "Проверяем…" : "Проверить ответы"}</span>
+              <span>{busy === "check" ? t.common.checking : t.practice.checkAnswers}</span>
               <span className="button-arrow" aria-hidden="true">↗</span>
             </button>
             <button className="button button-outline" type="button" onClick={() => setStep("setup")} disabled={Boolean(busy)}>
-              Сменить тему
+              {t.practice.changeTopic}
             </button>
           </div>
         </div>
@@ -535,8 +538,8 @@ export default function PracticePage({
             const allCorrect = correctCount === issues.length;
             return (
               <div className={`workspace-card score-card ${allCorrect ? "score-correct" : "score-partial"}`}>
-                <h2>{allCorrect ? "Тема отработана" : `Верно ${correctCount} из ${issues.length}`}</h2>
-                <p>{allCorrect ? "Все задания выполнены верно. Можно брать следующую тему." : "Разберите пояснения ниже и попробуйте пройти снова."}</p>
+                <h2>{allCorrect ? t.practice.resultDone : t.practice.resultPartial(correctCount, issues.length)}</h2>
+                <p>{allCorrect ? t.practice.resultDoneText : t.practice.resultPartialText}</p>
               </div>
             );
           })()}
@@ -549,7 +552,7 @@ export default function PracticePage({
                 <article key={index} className="workspace-card issue-card result-issue">
                   <div className="issue-head">
                     <span className="issue-num">{index + 1}</span>
-                    <span className="type-badge">{taskTypeLabel(issue.kind).toLocaleUpperCase("ru-RU")}</span>
+                    <span className="type-badge">{taskTypeName(t, issue.kind).toLocaleUpperCase(locale)}</span>
                     <span className={correct ? "correct-mark" : "wrong-mark"} aria-hidden="true">{correct ? "✓" : "!"}</span>
                   </div>
                   <p className="issue-prompt">{issue.kind === "test" ? issue.question : issue.kind === "words" ? issue.words.join(" + ") : issue.kind === "paste-blank" ? issue.text : issue.prompt}</p>
@@ -560,8 +563,8 @@ export default function PracticePage({
                     <p className="blank-translation">{issue.translation}</p>
                   )}
                   <div className="answer-feedback">
-                    <div><span>ВАШ ОТВЕТ</span><p>{learnerAnswerText(issue, answers[index] ?? [])}</p></div>
-                    {!correct && <div><span>ПРАВИЛЬНО</span><p>{issue.kind === "test" ? issue.variants[issue.correctIndex] : issue.kind === "paste-blank" ? issue.blanks.join(", ") : issue.correct}</p></div>}
+                    <div><span>{t.labels.yourResponse}</span><p>{learnerAnswerText(issue, answers[index] ?? [])}</p></div>
+                    {!correct && <div><span>{t.labels.correct}</span><p>{issue.kind === "test" ? issue.variants[issue.correctIndex] : issue.kind === "paste-blank" ? issue.blanks.join(", ") : issue.correct}</p></div>}
                   </div>
                   {row?.comment && <p className="feedback-comment">{row.comment}</p>}
                 </article>
@@ -571,20 +574,20 @@ export default function PracticePage({
 
           <div className="submit-row practice-actions">
             <button className="button button-primary" type="button" onClick={generate} disabled={Boolean(busy) || !online}>
-              <span>{busy === "generate" ? "Составляем…" : "Новые задания"}</span>
+              <span>{busy === "generate" ? t.practice.creating : t.practice.newTasks}</span>
               <span className="button-arrow" aria-hidden="true">↗</span>
             </button>
             <button className="button button-outline" type="button" onClick={() => setStep("setup")} disabled={Boolean(busy)}>
-              Другая тема
+              {t.practice.otherTopic}
             </button>
-            <Link className="button button-soft" href="/history">К истории</Link>
+            <Link className="button button-soft" href="/history">{t.practice.toHistory}</Link>
           </div>
           {busy === "generate" && (
             <div className="loading-card" role="status">
               <span className="loader" />
               <span>
-                <b>Готовим тренировку</b>
-                <small>Модель составляет 10 заданий по выбранной теме…</small>
+                <b>{t.practice.preparingTitle}</b>
+                <small>{t.practice.preparingText}</small>
               </span>
             </div>
           )}

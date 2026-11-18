@@ -16,8 +16,9 @@ it when changing the app. Keep `README.md` aligned with user-visible behavior an
 
 ## Product constraints
 
-- Keep all interface copy in Russian and preserve the five destinations: Разбор, История, Промпты, Инструкция, and
-  Настройки.
+- Interface copy lives in `app/i18n/` (Russian source in `ru.ts`; one file per language, same keys). Every new UI string
+  needs a key in all eleven language files, and `t` is the only way to render it. Model-facing prompts stay Russian.
+  Preserve the five destinations: Разбор, История, Промпты, Инструкция, and Настройки.
 - Treat this as an explanation tool, not a grader or general-purpose chatbot.
 - Keep settings, prompts, API keys, and history in browser storage. Send provider requests only through the server
   route handlers, and never log or persist credentials or user exercise content on the server.
