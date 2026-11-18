@@ -102,7 +102,8 @@ exists or was requested. There is no picker for the language being studied. Do n
 - **Name:** Лингва, set in caps as **ЛИНГВА**, positioned as an AI error explainer. Fixed.
 - **UI language is selectable.** Settings has an interface-language picker with the same eleven languages as the
   response picker. Every label, placeholder, helper, empty state, offline notice, error, confirmation, and date follows
-  it. Built-in rule text and the default system instruction stay Russian, because they are sent to the model.
+  it. Built-in rule text and the default system instruction follow the interface language until the learner edits them,
+  because they are sent to the model. Request scaffolding stays Russian.
 - **Voice:** friendly, structured, no filler. This governs the product's own copy and is also demanded of the
   explanation the model returns. Direct address, concrete about the mistake.
 - **No existing identity.** No logo, no icon, no chosen or licensed font, no brandbook — all of it is to be authored.

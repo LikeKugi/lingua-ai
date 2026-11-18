@@ -17,7 +17,9 @@ it when changing the app. Keep `README.md` aligned with user-visible behavior an
 ## Product constraints
 
 - Interface copy lives in `app/i18n/` (Russian source in `ru.ts`; one file per language, same keys). Every new UI string
-  needs a key in all eleven language files, and `t` is the only way to render it. Model-facing prompts stay Russian.
+  needs a key in all eleven language files, and `t` is the only way to render it. The built-in prompt templates and the default base instruction live in the `defaults` section of each language file and
+  follow the selected interface language until the learner edits them (`localizePrompts` in `app/i18n/index.tsx`).
+  Request scaffolding (`buildMessages` in `lib.ts`, Practice prompt builders) stays Russian.
   Preserve the five destinations: Разбор, История, Промпты, Инструкция, and Настройки.
 - Treat this as an explanation tool, not a grader or general-purpose chatbot.
 - Keep settings, prompts, API keys, and history in browser storage. Send provider requests only through the server

@@ -11,7 +11,7 @@ import {
   useState
 } from 'react';
 import {
-  BUILTIN_PROMPTS, defaultLanguage, defaultSettings, dateLabel,
+  defaultLanguage, defaultSettings, dateLabel,
   buildMessages, languageLabel, validBaseUrl, taskToText,
   isWordsTask, isPasteBlankTask, isTestTask,
   type HistoryItem, type PromptTemplate, type Settings, type TaskType,
@@ -28,7 +28,9 @@ import PromptsPage from './components/PromptsPage';
 import InstructionPage from './components/InstructionPage';
 import SettingsPage from './components/SettingsPage';
 import PracticePage from './components/PracticePage';
-import { createI18n, I18nProvider, isInterfaceLanguage, taskTypeName } from './i18n';
+import {
+  createI18n, defaultPrompts, I18nProvider, isInterfaceLanguage, localizePrompts, localizeSystemPrompt, taskTypeName,
+} from './i18n';
 
 const blankDraft = (): Draft => ({ taskType: 'sentence', words: [], wordsDescription: '', sentence: '', blankTask: [], testText: '', testVariants: [], userAnswer: '', correctAnswer: '' });
 const PAGES = [
@@ -45,8 +47,8 @@ export default function Workspace() {
   const pathname = usePathname();
   const router = useRouter();
   const page = pathname === '/practice' ? 'practice' : PAGES.find((entry) => entry.href === pathname)?.key ?? 'explain';
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [prompts, setPrompts] = useState<PromptTemplate[]>(BUILTIN_PROMPTS);
+  const [settings, setSettings] = useState<Settings>(() => defaultSettings(createI18n('ru').t.defaults.systemPrompt));
+  const [prompts, setPrompts] = useState<PromptTemplate[]>(() => defaultPrompts('ru'));
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [draft, setDraft] = useState<Draft>(blankDraft);
   const [hydrated, setHydrated] = useState(false);
@@ -74,6 +76,12 @@ export default function Workspace() {
 
   const i18n = useMemo(() => createI18n(settings.uiLanguage), [settings.uiLanguage]);
   const { t, locale } = i18n;
+  // Built-in prompts and an untouched default instruction are shown and sent in the interface language.
+  const shownSettings = useMemo(
+    () => ({ ...settings, systemPrompt: localizeSystemPrompt(settings.systemPrompt, i18n.language) }),
+    [settings, i18n.language],
+  );
+  const shownPrompts = useMemo(() => localizePrompts(prompts, i18n.language), [prompts, i18n.language]);
   // Effects that run once or do not list the dictionary as a dependency read the latest one through this ref.
   const tRef = useRef(t);
   useEffect(() => {
@@ -106,14 +114,14 @@ export default function Workspace() {
           ? parsedSettings.uiLanguage
           : savedSettings ? 'ru' : defaultLanguage();
         setSettings({
-          ...defaultSettings(), ...parsedSettings,
+          ...defaultSettings(createI18n(uiLanguage).t.defaults.systemPrompt), ...parsedSettings,
           baseUrl: restoredBaseUrl,
           language: parsedSettings.language ?? defaultLanguage(),
           uiLanguage,
         });
         if (savedPrompts) {
           const parsed = savedPrompts;
-          setPrompts([...BUILTIN_PROMPTS.map((builtin) => ({ ...builtin, ...(parsed.find((item) => item.id === builtin.id) ?? {}) })), ...parsed.filter((item) => !item.builtin)]);
+          setPrompts([...defaultPrompts(uiLanguage).map((builtin) => ({ ...builtin, ...(parsed.find((item) => item.id === builtin.id) ?? {}) })), ...parsed.filter((item) => !item.builtin)]);
         }
         if (savedHistory) setHistory(savedHistory.map((item) => ({ ...item, isPracticed: item.isPracticed ?? false })));
         if (savedDraft) setDraft({ ...blankDraft(), ...savedDraft });
@@ -366,8 +374,8 @@ export default function Workspace() {
             ? { text: draft.testText.trim(), variants: draft.testVariants.map((variant) => variant.trim()).filter(Boolean) }
             : draft.sentence.trim();
       const messages = buildMessages({
-        settings,
-        prompts,
+        settings: shownSettings,
+        prompts: shownPrompts,
         taskType: draft.taskType,
         task,
         userAnswer: draft.userAnswer,
@@ -558,7 +566,7 @@ export default function Workspace() {
         /> }
 
         { page === 'prompts' && <PromptsPage
-          prompts={ prompts }
+          prompts={ shownPrompts }
           editingPrompt={ editingPrompt }
           editingValue={ editingValue }
           promptForm={ promptForm }
@@ -569,7 +577,7 @@ export default function Workspace() {
           showToast={ showToast }
         /> }
         { page === 'instruction' && <InstructionPage
-          settings={ settings }
+          settings={ shownSettings }
           updateSetting={ updateSetting }
           showToast={ showToast }
         /> }

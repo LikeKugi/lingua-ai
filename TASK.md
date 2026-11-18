@@ -84,7 +84,8 @@ keyboard, and touch.
 ### Промпты (Prompts)
 
 - Start with four enabled built-in prompt templates: **Грамматика**, **Синтаксис**, **Лексика**, and **Примеры**. Users
-  can toggle and edit built-in prompts but cannot delete them.
+  can toggle and edit built-in prompts but cannot delete them. Their titles and text are shown and sent in the selected
+  interface language (all eleven languages); once a learner edits one, the edited text is kept as written.
 - Allow users to add, edit, enable/disable, and delete custom prompts. New prompts are enabled by default. Require a
   non-empty title and instruction; confirm deletion.
 - Include each enabled prompt as `title: body` in the system message for future explanations.
@@ -94,9 +95,9 @@ keyboard, and touch.
 - Provide a multiline editor for the base system prompt, a character count, and an indication that edits save
   automatically.
 - Include **Сбросить к стандартной**. It restores the default base instruction below without changing the prompt suffix
-  or prompt templates.
+  or prompt templates. The default base instruction follows the interface language the same way as the built-in templates.
 
-Default base system prompt:
+Default base system prompt (Russian; translated for the other interface languages):
 
 ```text
 Ты — опытный преподаватель иностранных языков.
@@ -133,7 +134,8 @@ Default base system prompt:
 
 ## Prompt defaults and request format
 
-The four built-in prompts are:
+The four built-in prompts are shown below in Russian; the other interface languages use translations of the same
+titles and instructions.
 
 | Title      | Instruction                                                                              |
 |------------|------------------------------------------------------------------------------------------|

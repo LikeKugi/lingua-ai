@@ -1,6 +1,24 @@
 import type { Messages } from "./ru";
 
 export const ja: Messages = {
+  // Built-in prompt templates and the default base instruction. They follow the interface language
+  // until the learner edits them (see localizePrompts / localizeSystemPrompt in ./index.tsx).
+  defaults: {
+    systemPrompt: `あなたは経験豊富な外国語の教師です。
+あなたの任務は、学習者が犯した間違いを説明することです。
+次の点を必ず行ってください：
+- 文法を分析する（単語の形がなぜ誤りなのか）、
+- 構文を分析する（語順や構造がなぜ誤りなのか）、
+- 語彙を分析する（その語がなぜ意味に合わないのか）、
+- 正しい形を示し、ルールを簡潔に説明する。
+親しみやすく、わかりやすい構成で、無駄なく答えてください。`,
+    builtinPrompts: {
+      grammar: { title: "文法", body: "時制、一致、格、冠詞など、文法上の誤りに特に注意してください。" },
+      syntax: { title: "構文", body: "語順、文の構造、主語と述語の一致を確認してください。" },
+      vocabulary: { title: "語彙", body: "選んだ語が適切か、コロケーションや自然な言い回しになっているかを確認してください。" },
+      examples: { title: "例文", body: "そのルールが正しく使われている例を2〜3個挙げてください。" },
+    },
+  },
   common: {
     listSeparator: "、",
     cancel: "キャンセル",

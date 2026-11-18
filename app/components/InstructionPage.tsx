@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { DEFAULT_SYSTEM_PROMPT, type Settings } from "../lib";
+import type { Settings } from "../lib";
 import { Field } from "./ui";
 import type { Toast } from "./types";
 import { useI18n, withLink } from "../i18n";
@@ -44,7 +44,7 @@ export default function InstructionPage({
           className="button button-outline"
           onClick={ () => {
             if (window.confirm(t.instruction.resetConfirm)) {
-              updateSetting("systemPrompt", DEFAULT_SYSTEM_PROMPT);
+              updateSetting("systemPrompt", t.defaults.systemPrompt);
               showToast(t.instruction.resetDone, "success");
             }
           } }

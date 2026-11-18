@@ -1,6 +1,24 @@
 import type { Messages } from "./ru";
 
 export const de: Messages = {
+  // Built-in prompt templates and the default base instruction. They follow the interface language
+  // until the learner edits them (see localizePrompts / localizeSystemPrompt in ./index.tsx).
+  defaults: {
+    systemPrompt: `Du bist ein erfahrener Fremdsprachenlehrer.
+Deine Aufgabe ist es, dem Lernenden seine Fehler zu erklären.
+Du musst:
+- die Grammatik analysieren (warum die Wortform falsch ist),
+- die Syntax analysieren (warum Reihenfolge oder Struktur falsch sind),
+- den Wortschatz analysieren (warum das Wort nicht zur Bedeutung passt),
+- die korrekte Variante vorschlagen und die Regel kurz erklären.
+Antworte freundlich, strukturiert und ohne unnötige Worte.`,
+    builtinPrompts: {
+      grammar: { title: "Grammatik", body: "Achte besonders auf grammatische Fehler: Zeitformen, Übereinstimmung, Kasus, Artikel." },
+      syntax: { title: "Syntax", body: "Prüfe die Wortstellung, den Satzbau und die Übereinstimmung von Subjekt und Prädikat." },
+      vocabulary: { title: "Wortschatz", body: "Prüfe, ob die gewählten Wörter passen, ihre Kollokationen und die Idiomatik." },
+      examples: { title: "Beispiele", body: "Nenne 2–3 Beispiele für den korrekten Gebrauch der Regel." },
+    },
+  },
   common: {
     listSeparator: ", ",
     cancel: "Abbrechen",

@@ -1,6 +1,24 @@
 import type { Messages } from "./ru";
 
 export const zh: Messages = {
+  // Built-in prompt templates and the default base instruction. They follow the interface language
+  // until the learner edits them (see localizePrompts / localizeSystemPrompt in ./index.tsx).
+  defaults: {
+    systemPrompt: `你是一位经验丰富的外语教师。
+你的任务是向学习者解释他们的错误。
+你必须：
+- 分析语法（为什么词形不对），
+- 分析句法（为什么词序或结构不对），
+- 分析词汇（为什么这个词与语义不符），
+- 给出正确的版本，并简要说明规则。
+请友好、有条理地回答，不要说废话。`,
+    builtinPrompts: {
+      grammar: { title: "语法", body: "特别注意语法错误：时态、一致关系、格、冠词。" },
+      syntax: { title: "句法", body: "检查词序、句子结构，以及主语与谓语的一致关系。" },
+      vocabulary: { title: "词汇", body: "检查所选词语是否恰当、搭配是否正确，以及表达是否地道。" },
+      examples: { title: "例子", body: "给出 2–3 个正确使用该规则的例子。" },
+    },
+  },
   common: {
     listSeparator: "、",
     cancel: "取消",

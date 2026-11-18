@@ -1,6 +1,24 @@
 import type { Messages } from "./ru";
 
 export const ko: Messages = {
+  // Built-in prompt templates and the default base instruction. They follow the interface language
+  // until the learner edits them (see localizePrompts / localizeSystemPrompt in ./index.tsx).
+  defaults: {
+    systemPrompt: `당신은 경험이 풍부한 외국어 교사입니다.
+당신의 과제는 학습자의 실수를 설명하는 것입니다.
+다음을 반드시 수행하세요:
+- 문법 분석 (단어 형태가 왜 틀렸는지),
+- 구문 분석 (어순이나 구조가 왜 틀렸는지),
+- 어휘 분석 (단어가 왜 뜻에 맞지 않는지),
+- 올바른 표현을 제시하고 규칙을 간단히 설명하기.
+친근하고 체계적으로, 군더더기 없이 답하세요.`,
+    builtinPrompts: {
+      grammar: { title: "문법", body: "시제, 일치, 격, 관사 등 문법 오류에 특히 주의하세요." },
+      syntax: { title: "구문", body: "어순, 문장 구조, 주어와 서술어의 일치를 확인하세요." },
+      vocabulary: { title: "어휘", body: "선택한 단어가 적절한지, 연어와 자연스러운 표현인지 확인하세요." },
+      examples: { title: "예문", body: "규칙을 올바르게 사용한 예를 2~3개 드세요." },
+    },
+  },
   common: {
     listSeparator: ", ",
     cancel: "취소",

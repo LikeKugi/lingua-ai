@@ -114,22 +114,6 @@ export type Settings = {
   uiLanguage: string;
 };
 
-export const DEFAULT_SYSTEM_PROMPT = `Ты — опытный преподаватель иностранных языков.
-Твоя задача — объяснять учащемуся его ошибки.
-Ты должен:
-- разобрать грамматику (почему форма слова неверна),
-- разобрать синтаксис (почему порядок/структура неверны),
-- разобрать лексику (почему слово не подходит по смыслу),
-- предложить корректный вариант и кратко пояснить правило.
-Отвечай дружелюбно, структурировано, без воды.`;
-
-export const BUILTIN_PROMPTS: PromptTemplate[] = [
-  { id: "grammar", title: "Грамматика", body: "Обрати особое внимание на грамматические ошибки: времена, согласование, падежи, артикли.", enabled: true, builtin: true },
-  { id: "syntax", title: "Синтаксис", body: "Проверь порядок слов, структуру предложения, согласование подлежащего и сказуемого.", enabled: true, builtin: true },
-  { id: "vocabulary", title: "Лексика", body: "Проверь уместность выбранных слов, коллокации, идиоматичность.", enabled: true, builtin: true },
-  { id: "examples", title: "Примеры", body: "Приведи 2–3 примера корректного употребления правила.", enabled: true, builtin: true },
-];
-
 export const LANGUAGES = [
   ["ru", "Русский"], ["en", "English"], ["de", "Deutsch"], ["fr", "Français"],
   ["es", "Español"], ["it", "Italiano"], ["pt", "Português"], ["zh", "中文"],
@@ -146,8 +130,9 @@ export function languageLabel(code: string) {
   return LANGUAGES.find(([id]) => id === code)?.[1] ?? "Русский";
 }
 
-export function defaultSettings(): Settings {
-  return { baseUrl: "https://api.openai.com/v1", model: "", language: "ru", suffix: "", systemPrompt: DEFAULT_SYSTEM_PROMPT, uiLanguage: "ru" };
+// The base instruction depends on the interface language, so callers pass the localized default.
+export function defaultSettings(systemPrompt: string): Settings {
+  return { baseUrl: "https://api.openai.com/v1", model: "", language: "ru", suffix: "", systemPrompt, uiLanguage: "ru" };
 }
 
 export function validBaseUrl(value: string) {

@@ -2,9 +2,28 @@
 // exactly these keys (see ./index.tsx). Values with parameters are functions:
 // keep the same parameter list when translating.
 // Strings containing `{link}` receive a link via `withLink()`; keep the placeholder once.
-// Model-facing prompts (lib.ts buildMessages, PracticePage prompt builders) are NOT here.
+// `defaults` holds the built-in prompt templates and default instruction, which are sent to the model in the
+// selected interface language. Request scaffolding (lib.ts buildMessages, PracticePage prompt builders) is NOT here.
 
 export const ru = {
+  // Built-in prompt templates and the default base instruction. They follow the interface language
+  // until the learner edits them (see localizePrompts / localizeSystemPrompt in ./index.tsx).
+  defaults: {
+    systemPrompt: `Ты — опытный преподаватель иностранных языков.
+Твоя задача — объяснять учащемуся его ошибки.
+Ты должен:
+- разобрать грамматику (почему форма слова неверна),
+- разобрать синтаксис (почему порядок/структура неверны),
+- разобрать лексику (почему слово не подходит по смыслу),
+- предложить корректный вариант и кратко пояснить правило.
+Отвечай дружелюбно, структурировано, без воды.`,
+    builtinPrompts: {
+      grammar: { title: "Грамматика", body: "Обрати особое внимание на грамматические ошибки: времена, согласование, падежи, артикли." },
+      syntax: { title: "Синтаксис", body: "Проверь порядок слов, структуру предложения, согласование подлежащего и сказуемого." },
+      vocabulary: { title: "Лексика", body: "Проверь уместность выбранных слов, коллокации, идиоматичность." },
+      examples: { title: "Примеры", body: "Приведи 2–3 примера корректного употребления правила." },
+    },
+  },
   common: {
     listSeparator: ", ",
     cancel: "Отмена",

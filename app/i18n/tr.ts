@@ -1,6 +1,24 @@
 import type { Messages } from "./ru";
 
 export const tr: Messages = {
+  // Built-in prompt templates and the default base instruction. They follow the interface language
+  // until the learner edits them (see localizePrompts / localizeSystemPrompt in ./index.tsx).
+  defaults: {
+    systemPrompt: `Sen deneyimli bir yabancı dil öğretmenisin.
+Görevin öğrencinin hatalarını açıklamaktır.
+Mutlaka şunları yapmalısın:
+- dilbilgisini analiz et (kelime biçimi neden yanlış),
+- sözdizimini analiz et (sıra veya yapı neden yanlış),
+- sözcük bilgisini analiz et (kelime neden anlama uymuyor),
+- doğru biçimi öner ve kuralı kısaca açıkla.
+Dostça, düzenli ve gereksiz laf kalabalığı olmadan yanıt ver.`,
+    builtinPrompts: {
+      grammar: { title: "Dilbilgisi", body: "Zamanlar, uyum ve hâl ekleri gibi dilbilgisel hatalara özellikle dikkat et." },
+      syntax: { title: "Sözdizimi", body: "Sözcük sırasını, cümle yapısını ve özne ile yüklem arasındaki uyumu kontrol et." },
+      vocabulary: { title: "Sözcük bilgisi", body: "Seçilen kelimelerin uygunluğunu, eş dizimliliklerini ve doğal kullanımını kontrol et." },
+      examples: { title: "Örnekler", body: "Kuralın doğru kullanımına dair 2–3 örnek ver." },
+    },
+  },
   common: {
     listSeparator: ", ",
     cancel: "İptal",
