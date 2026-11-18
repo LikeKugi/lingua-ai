@@ -17,7 +17,7 @@ Teachers and tutors are a real second audience, not an afterthought: they open t
 explanation of a specific student's mistake to hand back. No teacher-specific mode exists or was requested.
 
 The learner's own language of study is unconstrained by the product; nothing in it is built for one target language.
-The interface speaks Russian, and the explanation may come back in any of ten supported languages.
+The interface speaks Russian, and the explanation may come back in any of eleven supported languages.
 
 Sessions happen on a laptop, a tablet, or a phone — all three are first-class, none is the fallback. Sessions are
 short and easily interrupted.
@@ -67,8 +67,8 @@ Factual conditions of use that future work must design around:
 
 **Capabilities.** Five destinations: Разбор, История, Промпты, Инструкция, Настройки. Two task types: Слова (build a
 sentence from a set of words) and Предложение (translate or transform a source sentence). Markdown rendering of the
-answer. Load a provider's model list and check the connection. Ten response languages — Русский, English, Deutsch,
-Français, Español, Italiano, Português, 中文, 日本語, 한국어 — defaulting to the device language when supported and to
+answer. Load a provider's model list and check the connection. Eleven response languages — Русский, English, Deutsch,
+Français, Español, Italiano, Português, 中文, 日本語, 한국어, Türkçe — defaulting to the device language when supported and to
 Russian otherwise. Editable base system prompt with restore-to-standard. Four built-in prompt rules (Грамматика,
 Синтаксис, Лексика, Примеры) that can be toggled and edited but never deleted, plus custom rules the learner fully
 controls. Local history cards with a detail view, per-record delete, and a confirmed clear-all.

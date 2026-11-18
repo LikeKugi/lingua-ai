@@ -131,7 +131,7 @@ export const BUILTIN_PROMPTS: PromptTemplate[] = [
 export const LANGUAGES = [
   ["ru", "Русский"], ["en", "English"], ["de", "Deutsch"], ["fr", "Français"],
   ["es", "Español"], ["it", "Italiano"], ["pt", "Português"], ["zh", "中文"],
-  ["ja", "日本語"], ["ko", "한국어"],
+  ["ja", "日本語"], ["ko", "한국어"], ["tr", "Türkçe"],
 ] as const;
 
 export function defaultLanguage() {

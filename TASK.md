@@ -13,7 +13,7 @@ the learner’s chosen OpenAI-compatible provider, displays a structured explana
 
 The interface is in Russian. The response language is independently selectable. Support these response languages:
 Русский (`ru`), English (`en`), Deutsch (`de`), Français (`fr`), Español (`es`), Italiano (`it`), Português (`pt`), 中文
-(`zh`), 日本語 (`ja`), and 한국어 (`ko`). Default to the device language when it is supported; otherwise default to
+(`zh`), 日本語 (`ja`), 한국어 (`ko`), and Türkçe (`tr`). Default to the device language when it is supported; otherwise default to
 Russian.
 
 The app uses a bring-your-own-key model. Save the API key, provider base URL, and model selection on the client device.
